@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('calculator_parameters', function (Blueprint $table) {
-            $table->increments('parameter_id');
+            $table->id('parameter_id');
             $table->integer('category_id');
             $table->string('parameter_name', 100);
             $table->string('display_name', 100);
