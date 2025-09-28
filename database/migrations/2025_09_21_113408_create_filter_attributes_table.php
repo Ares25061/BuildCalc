@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('filter_attributes', function (Blueprint $table) {
-            $table->increments('attribute_id');
+            $table->id('attribute_id');
             $table->integer('category_id');
             $table->string('attribute_name', 100);
             $table->string('display_name', 100);

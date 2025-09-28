@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('calculation_formulas', function (Blueprint $table) {
-            $table->increments('formula_id');
+            $table->id('formula_id');
             $table->integer('category_id');
             $table->string('formula_name', 100);
             $table->text('formula_expression');
