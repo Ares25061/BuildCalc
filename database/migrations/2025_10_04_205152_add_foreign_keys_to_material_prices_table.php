@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('materials', function (Blueprint $table) {
-            $table->foreign(['category_id'], 'FK__materials__categ__45F365D3')->references(['category_id'])->on('categories')->onUpdate('no action')->onDelete('cascade');
+        Schema::table('material_prices', function (Blueprint $table) {
+            $table->foreign(['material_id'], 'material_prices_material_id_fkey')->references(['id'])->on('materials')->onUpdate('no action')->onDelete('cascade');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('materials', function (Blueprint $table) {
-            $table->dropForeign('FK__materials__categ__45F365D3');
+        Schema::table('material_prices', function (Blueprint $table) {
+            $table->dropForeign('material_prices_material_id_fkey');
         });
     }
 };

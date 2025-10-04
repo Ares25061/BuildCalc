@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
-            $table->id('category_id');
-            $table->string('category_name', 100)->unique('uq__categori__5189e2556e89be18');
-            $table->string('description', 1000)->nullable();
+        Schema::table('projects', function (Blueprint $table) {
+            $table->foreign(['user_id'], 'projects_user_id_fkey')->references(['id'])->on('users')->onUpdate('no action')->onDelete('cascade');
         });
     }
 
@@ -23,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::table('projects', function (Blueprint $table) {
+            $table->dropForeign('projects_user_id_fkey');
+        });
     }
 };

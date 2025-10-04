@@ -3,16 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Category;
+use App\Models\MaterialCategory;
 
-class CategoriesController extends Controller
+class MaterialCategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $categories = Category::get();
+        $categories = MaterialCategory::get();
         return response()->json($categories);
     }
 
@@ -21,7 +21,7 @@ class CategoriesController extends Controller
      */
     public function store(Request $request)
     {
-        Category::create($request->input());
+        MaterialCategory::create($request->input());
     }
 
     /**
@@ -29,7 +29,7 @@ class CategoriesController extends Controller
      */
     public function show(string $id)
     {
-        $category = Category::find($id);
+        $category = MaterialCategory::find($id);
         return response()->json($category);
     }
 
@@ -38,9 +38,10 @@ class CategoriesController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $category = Category::find($id);
-        $category->category_name = $request->category_name;
-        $category->description = $request->description;
+        $category = MaterialCategory::find($id);
+        $category->name = $request->name;
+        $category->parent_id = $request->parent_id;
+        $category->created_at = $request->created_at;
         $category->save();
         return response()->json($category);
     }
@@ -50,7 +51,7 @@ class CategoriesController extends Controller
      */
     public function destroy(string $id)
     {
-        Category::destroy($id);
+        MaterialCategory::destroy($id);
         return response()->json(['message' => 'Deleted']);
     }
 }
