@@ -10,6 +10,9 @@ use App\Http\Controllers\ProjectsController;
 use App\Http\Controllers\ProjectItemsController;
 use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\WorkTypesController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\MaterialConsumptionRatesController;
+use App\Http\Controllers\SelectedProjectMaterialsController;
 
 
 Route::get('/user', function (Request $request) {
@@ -17,7 +20,19 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Users
-// ?
+Route::apiResource('users', UserController::class);
+Route::patch('users/{id}', [UserController::class, 'update']);
+Route::delete('users/{id}', [UserController::class, 'destroy']);
+
+// MaterialConsumptionRates
+Route::apiResource('materialConsumptionRates', MaterialConsumptionRatesController::class);
+Route::patch('materialConsumptionRates/{id}', [MaterialConsumptionRatesController::class, 'update']);
+Route::delete('materialConsumptionRates/{id}', [MaterialConsumptionRatesController::class, 'destroy']);
+
+// SelectedProjectMaterials
+Route::apiResource('selectedProjectMaterials', SelectedProjectMaterialsController::class);
+Route::patch('selectedProjectMaterials/{id}', [SelectedProjectMaterialsController::class, 'update']);
+Route::delete('selectedProjectMaterials/{id}', [SelectedProjectMaterialsController::class, 'destroy']);
 
 // Materials
 Route::apiResource('materials', MaterialsController::class);
@@ -25,14 +40,14 @@ Route::patch('materials/{id}', [MaterialsController::class, 'update']);
 Route::delete('materials/{id}', [MaterialsController::class, 'destroy']);
 
 // Material categories
-Route::apiResource('material_categories', MaterialCategoryController::class);
-Route::patch('material_categories/{id}', [MaterialCategoryController::class, 'update']);
-Route::delete('material_categories/{id}', [MaterialCategoryController::class, 'destroy']);
+Route::apiResource('materialCategories', MaterialCategoryController::class);
+Route::patch('materialCategories/{id}', [MaterialCategoryController::class, 'update']);
+Route::delete('materialCategories/{id}', [MaterialCategoryController::class, 'destroy']);
 
 // Material prices
-Route::apiResource('material_prices', MaterialPricesController::class);
-Route::patch('material_prices/{id}', [MaterialPricesController::class, 'update']);
-Route::delete('material_categories/{id}', [MaterialPricesController::class, 'destroy']);
+Route::apiResource('materialPrices', MaterialPricesController::class);
+Route::patch('materialPrices/{id}', [MaterialPricesController::class, 'update']);
+Route::delete('materialPrices/{id}', [MaterialPricesController::class, 'destroy']);
 
 // Projects
 Route::apiResource('projects', ProjectsController::class);
@@ -40,9 +55,9 @@ Route::patch('projects/{id}', [ProjectsController::class, 'update']);
 Route::delete('projects/{id}', [ProjectsController::class, 'destroy']);
 
 // Project items
-Route::apiResource('project_items', ProjectItemsController::class);
-Route::patch('project_items/{id}', [ProjectItemsController::class, 'update']);
-Route::delete('project_items/{id}', [ProjectItemsController::class, 'destroy']);
+Route::apiResource('projectItems', ProjectItemsController::class);
+Route::patch('projectItems/{id}', [ProjectItemsController::class, 'update']);
+Route::delete('projectItems/{id}', [ProjectItemsController::class, 'destroy']);
 
 // Suppliers
 Route::apiResource('suppliers', SuppliersController::class);
@@ -50,6 +65,6 @@ Route::patch('suppliers/{id}', [SuppliersController::class, 'update']);
 Route::delete('suppliers/{id}', [SuppliersController::class, 'destroy']);
 
 // Work types
-Route::apiResource('work_types', WorkTypesController::class);
-Route::patch('work_types/{id}', [WorkTypesController::class, 'update']);
-Route::delete('work_types/{id}', [WorkTypesController::class, 'destroy']);
+Route::apiResource('workTypes', WorkTypesController::class);
+Route::patch('workTypes/{id}', [WorkTypesController::class, 'update']);
+Route::delete('workTypes/{id}', [WorkTypesController::class, 'destroy']);
