@@ -21,9 +21,16 @@
                 <a href="#" class="text-gray-300 hover:text-white font-medium transition duration-200">Калькулятор</a>
                 <a href="#" class="text-gray-300 hover:text-white font-medium transition duration-200">Материалы</a>
             </div>
-            <div class="flex items-center space-x-4">
-                <a href="{{ route('login') }}" class="text-gray-300 hover:text-white transition duration-200">Вход</a>
-                <a href="{{ route('register') }}" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition duration-200 font-medium">Регистрация</a>
+            <div class="flex items-center">
+                <div id="guestButtons" class="flex items-center space-x-8">
+                    <a href="/login" class="text-gray-300 hover:text-white transition duration-200">Вход</a>
+                    <a href="/register" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition duration-200 font-medium">Регистрация</a>
+                </div>
+                <div id="userButtons" class="hidden">
+                    <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition duration-200 font-medium">
+                        Выйти из аккаунта
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -119,5 +126,55 @@
     </div>
 </footer>
 
+<script>
+    // check auth status
+    window.addEventListener('load', function() {
+        const token = localStorage.getItem('auth_token');
+        const guestButtons = document.getElementById('guestButtons');
+        const userButtons = document.getElementById('userButtons');
+
+        if (token) {
+            // logged in  - show logout button
+            guestButtons.classList.add('hidden');
+            userButtons.classList.remove('hidden');
+        } else {
+            // not logged in - show login/register buttons
+            guestButtons.classList.remove('hidden');
+            userButtons.classList.add('hidden');
+        }
+    });
+
+    async function logout() {
+        const token = localStorage.getItem('auth_token');
+
+        try {
+            const response = await fetch('/api/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                // clear storage
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            } else {
+                console.error('Logout failed');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+    }
+</script>
 </body>
 </html>

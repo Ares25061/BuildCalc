@@ -14,9 +14,13 @@
             <span class="text-2xl font-bold text-gray-900">MaterialHub</span>
         </a>
     </div>
-    <form class="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg border border-gray-200" action="#" method="POST">
+    <form id="registerForm" class="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg border border-gray-200" >
         <h2 class="text-3xl text-center font-bold text-gray-900">Создать аккаунт</h2>
         @csrf
+
+        <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
+        <div id="successMessage" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"></div>
+
         <div class="space-y-4">
 
             <div>
@@ -55,5 +59,72 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+        };
+
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem('auth_token', data.authorization.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                showMessage('success', 'Аккаунт создан.');
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+            } else {
+                if (data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join(', ');
+                    showMessage('error', errorMessages);
+                } else {
+                    showMessage('error', data.message || 'Ты ошибка');
+                }
+            }
+        } catch (error) {
+            showMessage('error', 'Попробуйте снова.');
+        }
+    });
+
+    function showMessage(type, message) {
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+
+        if (type === 'error') {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            successDiv.classList.add('hidden');
+        } else {
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+        }
+    }
+
+    window.addEventListener('load', function() {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            window.location.href = '/';
+        }
+    });
+</script>
 </body>
 </html>

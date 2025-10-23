@@ -15,9 +15,13 @@
         </a>
     </div>
 
-    <form class="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg border border-gray-200" action="#" method="POST">
+    <form id="loginForm" class="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
         <h2 class="text-3xl text-center font-bold text-gray-900">Вход в аккаунт</h2>
         @csrf
+
+        <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
+        <div id="successMessage" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"></div>
+
         <div class="space-y-4">
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Почта</label>
@@ -56,5 +60,69 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = {
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+        };
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem('auth_token', data.authorization.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                showMessage('success', 'Успешный вход.');
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+            } else {
+                showMessage('error', data.message || 'Ошибка входа');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showMessage('error', 'Что-то поломалось.');
+        }
+    });
+
+    function showMessage(type, message) {
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+
+        if (type === 'error') {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            successDiv.classList.add('hidden');
+        } else {
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+        }
+    }
+    // check if already logged in
+    window.addEventListener('load', function() {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            window.location.href = '/dashboard';
+        }
+    });
+</script>
 </body>
 </html>
+
+
