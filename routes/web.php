@@ -13,3 +13,12 @@ Route::get('/login', function () {
 Route::get('/register', function () {
     return view('register');
 })->name('register');
+
+
+Route::get('/categories', fn() => view('categories'));
+
+Route::get('/materials/{id}', fn($id) => view('materials'));
+
+Route::get('/categories/{slug}/materials', function ($slug) {
+    return view('materials');
+})->name('categories.materials');
