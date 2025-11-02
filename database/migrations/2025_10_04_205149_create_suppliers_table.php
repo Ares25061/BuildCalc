@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name', 100)->unique('suppliers_name_key');
             $table->string('base_url')->nullable();
             $table->boolean('is_active')->nullable()->default(true);
+            $table->timestamps();
         });
     }
 

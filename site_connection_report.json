@@ -1,0 +1,66 @@
+{
+    "successful": 4,
+    "failed": 6,
+    "results": {
+        "leroymerlin.ru": {
+            "success": false,
+            "error": "HTTP: 301",
+            "http_code": "301",
+            "time": 38.44
+        },
+        "castorama.ru": {
+            "success": false,
+            "error": "file_get_contents(https:\/\/www.castorama.ru): Failed to open stream: php_network_getaddresses: getaddrinfo for www.castorama.ru failed: Этот хост неизвестен",
+            "http_code": 0,
+            "time": 0.19
+        },
+        "petrovich.ru": {
+            "success": false,
+            "error": "HTTP: 307",
+            "http_code": "307",
+            "time": 31.97
+        },
+        "maxidom.ru": {
+            "success": true,
+            "error": "",
+            "http_code": 200,
+            "time": 0.29
+        },
+        "stroylandiya.ru": {
+            "success": true,
+            "error": "",
+            "http_code": 200,
+            "time": 0.57
+        },
+        "obi.ru": {
+            "success": true,
+            "error": "",
+            "http_code": 200,
+            "time": 0.62
+        },
+        "vseinstrumenti.ru": {
+            "success": false,
+            "error": "HTTP: 403",
+            "http_code": "403",
+            "time": 30.09
+        },
+        "stroyka.ru": {
+            "success": true,
+            "error": "",
+            "http_code": 200,
+            "time": 0.54
+        },
+        "homehardware.ru": {
+            "success": false,
+            "error": "HTTP: 403",
+            "http_code": "403",
+            "time": 0.15
+        },
+        "tdsaturn.ru": {
+            "success": false,
+            "error": "file_get_contents(https:\/\/tdsaturn.ru): Failed to open stream: Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение",
+            "http_code": 0,
+            "time": 4.25
+        }
+    }
+}
