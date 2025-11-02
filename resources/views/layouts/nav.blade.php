@@ -8,7 +8,7 @@
 
             <div class="hidden md:flex space-x-8">
                 <a href="/categories" class="text-gray-300 hover:text-white font-medium transition duration-200">Каталог материалов</a>
-                <a href="#" class="text-gray-300 hover:text-white font-medium transition duration-200">Сметы</a>
+                <a href="/project" class="text-gray-300 hover:text-white font-medium transition duration-200">Сметы</a>
                 <a href="#" class="text-gray-300 hover:text-white font-medium transition duration-200">Калькулятор</a>
             </div>
 
@@ -27,3 +27,55 @@
         </div>
     </div>
 </nav>
+
+
+<script>
+    // check auth status
+    window.addEventListener('load', function() {
+        const token = localStorage.getItem('auth_token');
+        const guestButtons = document.getElementById('guestButtons');
+        const userButtons = document.getElementById('userButtons');
+
+        if (token) {
+            // logged in  - show logout button
+            guestButtons.classList.add('hidden');
+            userButtons.classList.remove('hidden');
+        } else {
+            // not logged in - show login/register buttons
+            guestButtons.classList.remove('hidden');
+            userButtons.classList.add('hidden');
+        }
+    });
+
+    async function logout() {
+        const token = localStorage.getItem('auth_token');
+
+        try {
+            const response = await fetch('/api/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                // clear storage
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            } else {
+                console.error('Logout failed');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+    }
+</script>

@@ -22,3 +22,20 @@ Route::get('/materials/{id}', fn($id) => view('materials'));
 Route::get('/categories/{slug}/materials', function ($slug) {
     return view('materials');
 })->name('categories.materials');
+
+Route::get('/project', function () {
+    return view('project'); // страница со списком смет
+})->name('project.index');
+
+Route::get('/project/create', function () {
+    // Здесь будет форма создания сметы
+    return view('project.create');
+})->name('project.create');
+
+Route::get('/project/{id}', function ($id) {
+    // Передаем ID в представление, если нужно
+    return view('project.show', ['projectId' => $id]);
+})->name('project.show');
+
+
+Route::get('/test', fn() => view('test'));
