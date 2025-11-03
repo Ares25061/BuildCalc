@@ -41,6 +41,7 @@ class MaterialCategoryController extends Controller
         $category = MaterialCategory::find($id);
         $category->name = $request->name;
         $category->parent_id = $request->parent_id;
+        $category->image_url = $request->image_url;
         $category->created_at = $request->created_at;
         $category->save();
         return response()->json($category);

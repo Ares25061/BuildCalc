@@ -13,14 +13,15 @@ use Illuminate\Support\Str;
 class ParseAllObiCategories extends Command
 {
     protected $signature = 'parse:all-obi
-                            {--limit=50 : Products per category}
-                            {--pages=2 : Pages per category}
-                            {--with-rates : Create consumption rates}
-                            {--skip-existing : Skip categories with existing materials}
-                            {--categories= : Specific categories (comma separated)}
-                            {--scan : Force rescan categories from OBI}';
+                            {--limit=50 : Товаров на категорию}
+                            {--pages=2 : Страниц на категорию}
+                            {--with-rates : Создать нормы расхода}
+                            {--skip-existing : Пропустить категории с существующими материалами}
+                            {--categories= : Конкретные категории (через запятую)}
+                            {--scan : Принудительное сканирование категорий с OBI}
+                            {--update-images : Обновить картинки для существующих категорий}';
 
-    protected $description = 'Parse all OBI categories automatically';
+    protected $description = 'Автоматический парсинг всех категорий OBI';
 
     private Client $client;
 
@@ -39,7 +40,7 @@ class ParseAllObiCategories extends Command
 
     public function handle()
     {
-        $this->info('🚀 Starting automatic parsing of all OBI categories...');
+        $this->info('🚀 Запуск автоматического парсинга всех категорий OBI...');
 
         $parser = new ObiParserService();
         $limit = (int)$this->option('limit');
@@ -48,18 +49,25 @@ class ParseAllObiCategories extends Command
         $skipExisting = $this->option('skip-existing');
         $specificCategories = $this->option('categories');
         $forceScan = $this->option('scan');
+        $updateImages = $this->option('update-images');
 
         $this->showConfig($limit, $pages, $withRates, $skipExisting);
+
+        // Обновление картинок для существующих категорий
+        if ($updateImages) {
+            $this->updateExistingCategoriesImages();
+            return 0;
+        }
 
         // Получаем категории для парсинга (сканируем с сайта OBI)
         $categoriesToParse = $this->getCategoriesToParse($specificCategories, $skipExisting, $forceScan);
 
         if (empty($categoriesToParse)) {
-            $this->error('❌ No categories found to parse');
+            $this->error('❌ Не найдено категорий для парсинга');
             return 1;
         }
 
-        $this->info("\n📋 Categories to parse: " . count($categoriesToParse));
+        $this->info("\n📋 Категорий для парсинга: " . count($categoriesToParse));
 
         $totalResults = [
             'categories' => 0,
@@ -81,11 +89,11 @@ class ParseAllObiCategories extends Command
 
     private function showConfig(int $limit, int $pages, bool $withRates, bool $skipExisting): void
     {
-        $this->info("⚙️  Configuration:");
-        $this->info("   📊 Products per category: {$limit}");
-        $this->info("   📄 Pages per category: {$pages}");
-        $this->info("   📏 With consumption rates: " . ($withRates ? 'Yes' : 'No'));
-        $this->info("   ⏭️ Skip existing: " . ($skipExisting ? 'Yes' : 'No'));
+        $this->info("⚙️  Конфигурация:");
+        $this->info("   📊 Товаров на категорию: {$limit}");
+        $this->info("   📄 Страниц на категорию: {$pages}");
+        $this->info("   📏 С нормами расхода: " . ($withRates ? 'Да' : 'Нет'));
+        $this->info("   ⏭️ Пропускать существующие: " . ($skipExisting ? 'Да' : 'Нет'));
     }
 
     private function getCategoriesToParse(?string $specificCategories, bool $skipExisting, bool $forceScan): array
@@ -109,13 +117,13 @@ class ParseAllObiCategories extends Command
             ];
         }
 
-        $this->info("🎯 Specific categories: " . implode(', ', $categorySlugs));
+        $this->info("🎯 Конкретные категории: " . implode(', ', $categorySlugs));
         return $categories;
     }
 
     private function getCategoriesFromObi(bool $skipExisting, bool $forceScan): array
     {
-        $this->info("\n🔍 Scanning OBI categories...");
+        $this->info("\n🔍 Сканирование категорий OBI...");
 
         try {
             $url = 'https://obi.ru/strojmaterialy';
@@ -123,12 +131,19 @@ class ParseAllObiCategories extends Command
             $html = (string)$response->getBody();
             $document = new Document($html);
 
-            $categories = $document->find('a[href*="/strojmaterialy/"]');
+            // Ищем категории по структуре из примера
+            $categories = $document->find('a.kn7A0[href*="/strojmaterialy/"]');
 
             $categoryData = [];
             foreach ($categories as $category) {
                 $href = $category->getAttribute('href');
-                $name = trim($category->text());
+                $nameElement = $category->first('span._17tb-');
+
+                if (!$nameElement) {
+                    continue;
+                }
+
+                $name = trim($nameElement->text());
 
                 // Фильтруем категории
                 if (strpos($href, '/strojmaterialy/') !== false &&
@@ -139,15 +154,13 @@ class ParseAllObiCategories extends Command
                     $slug = str_replace('/strojmaterialy/', '', $href);
                     $slug = rtrim($slug, '/');
 
-                    // Извлекаем количество товаров из названия (если есть)
-                    $cleanName = preg_replace('/\s*\(\d+\)\s*$/', '', $name);
-                    preg_match('/\((\d+)\)/', $name, $matches);
-                    $productCount = $matches[1] ?? null;
+                    // Извлекаем картинку категории
+                    $imageUrl = $this->extractCategoryImage($category);
 
                     $categoryData[] = [
-                        'name' => $cleanName,
+                        'name' => $name,
                         'slug' => $slug,
-                        'product_count' => $productCount,
+                        'image_url' => $imageUrl,
                         'url' => 'https://obi.ru' . $href
                     ];
                 }
@@ -161,14 +174,7 @@ class ParseAllObiCategories extends Command
 
             $categories = array_values($uniqueCategories);
 
-            $this->info("✅ Found " . count($categories) . " categories on OBI");
-
-            // Сортируем по количеству товаров (если есть)
-            usort($categories, function($a, $b) {
-                $countA = $a['product_count'] ?? 0;
-                $countB = $b['product_count'] ?? 0;
-                return $countB - $countA;
-            });
+            $this->info("✅ Найдено " . count($categories) . " категорий на OBI");
 
             // Показываем найденные категории
             $this->showScannedCategories($categories);
@@ -184,34 +190,122 @@ class ParseAllObiCategories extends Command
             return $categories;
 
         } catch (\Exception $e) {
-            $this->error("❌ Error scanning categories: " . $e->getMessage());
+            $this->error("❌ Ошибка сканирования категорий: " . $e->getMessage());
             return [];
         }
     }
 
+    private function extractCategoryImage($categoryElement): ?string
+    {
+        try {
+            // Ищем картинку по структуре из примера
+            $imageElement = $categoryElement->first('img._1Z94x');
+
+            if ($imageElement) {
+                $src = $imageElement->getAttribute('src');
+                if ($src && $this->isValidImageUrl($src)) {
+                    $this->info("   🖼️  Найдена картинка для категории");
+                    return $this->normalizeImageUrl($src);
+                }
+            }
+
+            // Альтернативные селекторы
+            $alternativeSelectors = [
+                '.Image img',
+                '.category-image img',
+                'img[loading="lazy"]'
+            ];
+
+            foreach ($alternativeSelectors as $selector) {
+                $img = $categoryElement->first($selector);
+                if ($img) {
+                    $src = $img->getAttribute('src') ?:
+                        $img->getAttribute('data-src') ?:
+                            $img->getAttribute('data-lazy-src');
+
+                    if ($src && $this->isValidImageUrl($src)) {
+                        $this->info("   🖼️  Найдена картинка (альтернативный селектор)");
+                        return $this->normalizeImageUrl($src);
+                    }
+                }
+            }
+
+            $this->warn("   ⚠️  Картинка не найдена для категории");
+            return null;
+
+        } catch (\Exception $e) {
+            $this->warn("   ⚠️  Ошибка извлечения картинки: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function isValidImageUrl(?string $url): bool
+    {
+        if (!$url) return false;
+
+        // Проверяем, что это URL картинки
+        $imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
+        $url = strtolower($url);
+
+        foreach ($imageExtensions as $ext) {
+            if (str_contains($url, $ext)) {
+                return true;
+            }
+        }
+
+        // Проверяем паттерны OBI для картинок
+        $obiPatterns = ['/obi.ru\/img/', '/obi.ru\/pictures/', '/images.obi.ru/', '/media.obi.ru/'];
+        foreach ($obiPatterns as $pattern) {
+            if (preg_match($pattern, $url)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function normalizeImageUrl(string $url): string
+    {
+        // Преобразуем относительные URL в абсолютные
+        if (str_starts_with($url, '//')) {
+            return 'https:' . $url;
+        }
+
+        if (str_starts_with($url, '/')) {
+            return 'https://obi.ru' . $url;
+        }
+
+        return $url;
+    }
+
     private function showScannedCategories(array $categories): void
     {
-        $this->info("\n📋 Scanned categories from OBI:");
+        $this->info("\n📋 Найденные категории OBI:");
 
         $tableData = [];
         foreach ($categories as $category) {
-            $productCount = $category['product_count'] ? "({$category['product_count']} товаров)" : "";
+            $hasImage = $category['image_url'] ? "✅" : "❌";
             $tableData[] = [
                 $category['name'],
                 $category['slug'],
-                $productCount
+                $hasImage,
+                $category['image_url'] ? Str::limit($category['image_url'], 40) : 'Нет картинки'
             ];
         }
 
         $this->table(
-            ['Name', 'Slug', 'Products'],
+            ['Название', 'Slug', 'Картинка', 'URL картинки'],
             $tableData
         );
+
+        // Показываем статистику по картинкам
+        $categoriesWithImages = count(array_filter($categories, fn($cat) => !empty($cat['image_url'])));
+        $this->info("🖼️  Категорий с картинками: {$categoriesWithImages}/" . count($categories));
     }
 
     private function createCategoriesInDb(array $categories): void
     {
-        $this->info("\n💾 Creating categories in database...");
+        $this->info("\n💾 Создание категорий в базе данных...");
 
         // Создаем родительскую категорию
         $parentCategory = MaterialCategory::firstOrCreate(
@@ -221,6 +315,7 @@ class ParseAllObiCategories extends Command
 
         $createdCount = 0;
         $existingCount = 0;
+        $imagesCount = 0;
 
         foreach ($categories as $category) {
             $existingCategory = MaterialCategory::where('name', $category['name'])->first();
@@ -229,14 +324,21 @@ class ParseAllObiCategories extends Command
                 MaterialCategory::create([
                     'name' => $category['name'],
                     'parent_id' => $parentCategory->id,
+                    'image_url' => $category['image_url']
                 ]);
                 $createdCount++;
+                if ($category['image_url']) $imagesCount++;
             } else {
+                // Обновляем картинку у существующей категории если её нет
+                if (!$existingCategory->image_url && $category['image_url']) {
+                    $existingCategory->update(['image_url' => $category['image_url']]);
+                    $imagesCount++;
+                }
                 $existingCount++;
             }
         }
 
-        $this->info("✅ Categories created: {$createdCount}, existing: {$existingCount}");
+        $this->info("✅ Создано категорий: {$createdCount}, существовало: {$existingCount}, с картинками: {$imagesCount}");
     }
 
     private function filterExistingCategories(array $categories): array
@@ -251,11 +353,11 @@ class ParseAllObiCategories extends Command
             if ($materialCount === 0) {
                 $filtered[] = $category;
             } else {
-                $this->info("⏭️ Skipping {$category['name']} - already has {$materialCount} materials");
+                $this->info("⏭️ Пропускаем {$category['name']} - уже есть {$materialCount} материалов");
             }
         }
 
-        $this->info("📊 After filtering: " . count($filtered) . " categories to parse");
+        $this->info("📊 После фильтрации: " . count($filtered) . " категорий для парсинга");
         return $filtered;
     }
 
@@ -266,6 +368,9 @@ class ParseAllObiCategories extends Command
             'fasadnye-materialy' => 'Фасадные материалы',
             'kraski' => 'Краски',
             'plitka' => 'Плитка',
+            'krovlja' => 'Кровля',
+            'lesomaterialy' => 'Лесоматериалы',
+            'suhie-smesi' => 'Сухие смеси',
         ];
 
         return $mapping[$slug] ?? Str::title(str_replace('-', ' ', $slug));
@@ -274,9 +379,9 @@ class ParseAllObiCategories extends Command
     private function parseCategory(ObiParserService $parser, array $category, int $limit, int $pages, bool $withRates, array &$totalResults): void
     {
         $this->info("\n" . str_repeat('=', 60));
-        $this->info("🔄 Parsing: {$category['name']} ({$category['slug']})");
-        if ($category['product_count']) {
-            $this->info("   📊 Expected: ~{$category['product_count']} products");
+        $this->info("🔄 Парсинг: {$category['name']} ({$category['slug']})");
+        if ($category['image_url']) {
+            $this->info("   🖼️  Есть картинка категории");
         }
         $this->info(str_repeat('=', 60));
 
@@ -286,12 +391,12 @@ class ParseAllObiCategories extends Command
             $products = $parser->parseCategory($category['slug'], $limit, $allPages);
 
             if (empty($products)) {
-                $this->error("❌ No products found in {$category['name']}");
+                $this->error("❌ Не найдено товаров в категории {$category['name']}");
                 $totalResults['failed']++;
                 return;
             }
 
-            $this->info("✅ Found " . count($products) . " products");
+            $this->info("✅ Найдено " . count($products) . " товаров");
 
             // Сохраняем в БД
             if ($withRates) {
@@ -316,28 +421,28 @@ class ParseAllObiCategories extends Command
             sleep(2);
 
         } catch (\Exception $e) {
-            $this->error("❌ Error parsing {$category['name']}: " . $e->getMessage());
+            $this->error("❌ Ошибка парсинга {$category['name']}: " . $e->getMessage());
             $totalResults['failed']++;
         }
     }
 
     private function showCategoryResults(array $results, array $products): void
     {
-        $this->info("📊 Category results:");
-        $this->info("   📦 Materials saved: " . count($results['materials']));
+        $this->info("📊 Результаты по категории:");
+        $this->info("   📦 Сохранено материалов: " . count($results['materials']));
 
         if ($results['category']) {
-            $this->info("   📁 Category: " . $results['category']->name);
+            $this->info("   📁 Категория: " . $results['category']->name);
         }
 
         if (!empty($results['consumption_rates'])) {
-            $this->info("   📏 Consumption rates: " . count($results['consumption_rates']));
+            $this->info("   📏 Норм расхода: " . count($results['consumption_rates']));
         }
 
         // Показываем несколько примеров
         if (count($products) > 0) {
             $sampleCount = min(3, count($products));
-            $this->info("   📋 Sample products:");
+            $this->info("   📋 Примеры товаров:");
 
             for ($i = 0; $i < $sampleCount; $i++) {
                 $product = $products[$i];
@@ -346,27 +451,92 @@ class ParseAllObiCategories extends Command
         }
     }
 
+    private function updateExistingCategoriesImages(): void
+    {
+        $this->info("\n🔄 Обновление картинок для существующих категорий...");
+
+        $categories = MaterialCategory::whereNull('image_url')
+            ->where('name', '!=', 'Стройматериалы OBI')
+            ->get();
+
+        $this->info("📋 Найдено категорий без картинок: " . $categories->count());
+
+        $updatedCount = 0;
+
+        foreach ($categories as $category) {
+            try {
+                $this->info("\n🔍 Поиск картинки для: {$category->name}");
+
+                // Пробуем найти картинку через поиск категории на OBI
+                $imageUrl = $this->findCategoryImageByName($category->name);
+
+                if ($imageUrl) {
+                    $category->update(['image_url' => $imageUrl]);
+                    $this->info("✅ Обновлена картинка для: {$category->name}");
+                    $updatedCount++;
+                } else {
+                    $this->warn("⚠️ Картинка не найдена для: {$category->name}");
+                }
+
+                sleep(1); // Пауза между запросами
+
+            } catch (\Exception $e) {
+                $this->warn("⚠️ Не удалось обновить картинку для {$category->name}: " . $e->getMessage());
+            }
+        }
+
+        $this->info("\n🎯 Обновлено картинок для {$updatedCount} категорий");
+    }
+
+    private function findCategoryImageByName(string $categoryName): ?string
+    {
+        try {
+            // Пробуем найти категорию по имени через поиск
+            $searchUrl = 'https://obi.ru/search?q=' . urlencode($categoryName);
+            $response = $this->client->get($searchUrl);
+            $html = (string)$response->getBody();
+            $document = new Document($html);
+
+            // Ищем категории в результатах поиска
+            $categoryLinks = $document->find('a[href*="/strojmaterialy/"]');
+
+            foreach ($categoryLinks as $link) {
+                $nameElement = $link->first('span._17tb-') ?: $link->first('.category-name');
+                if ($nameElement && trim($nameElement->text()) === $categoryName) {
+                    return $this->extractCategoryImage($link);
+                }
+            }
+
+            return null;
+
+        } catch (\Exception $e) {
+            $this->warn("   ⚠️ Ошибка поиска картинки по имени: " . $e->getMessage());
+            return null;
+        }
+    }
+
     private function showFinalResults(array $totalResults): void
     {
         $this->info("\n" . str_repeat('⭐', 60));
-        $this->info("🎊 AUTOMATIC PARSING COMPLETED!");
+        $this->info("🎊 АВТОМАТИЧЕСКИЙ ПАРСИНГ ЗАВЕРШЕН!");
         $this->info(str_repeat('⭐', 60));
 
-        $this->info("📈 Final Results:");
-        $this->info("   ✅ Categories processed: {$totalResults['categories']}");
-        $this->info("   📦 Total materials saved: {$totalResults['materials']}");
-        $this->info("   📏 Consumption rates created: {$totalResults['rates']}");
-        $this->info("   ❌ Failed categories: {$totalResults['failed']}");
+        $this->info("📈 Итоговые результаты:");
+        $this->info("   ✅ Обработано категорий: {$totalResults['categories']}");
+        $this->info("   📦 Всего сохранено материалов: {$totalResults['materials']}");
+        $this->info("   📏 Создано норм расхода: {$totalResults['rates']}");
+        $this->info("   ❌ Неудачных категорий: {$totalResults['failed']}");
 
-        $this->info("\n💾 Database now contains:");
-        $this->info("   📁 Categories: " . MaterialCategory::count());
-        $this->info("   📦 Materials: " . Material::count());
-        $this->info("   💰 Prices: " . \App\Models\MaterialPrice::count());
-        $this->info("   📏 Consumption rates: " . \App\Models\MaterialConsumptionRate::count());
+        $this->info("\n💾 В базе данных сейчас:");
+        $this->info("   📁 Категорий: " . MaterialCategory::count());
+        $this->info("   📦 Материалов: " . Material::count());
+        $this->info("   💰 Цен: " . \App\Models\MaterialPrice::count());
+        $this->info("   📏 Норм расхода: " . \App\Models\MaterialConsumptionRate::count());
 
-        $this->info("\n🎯 Next steps:");
-        $this->info("   • Run: php artisan parse:all-obi --with-rates --limit=100");
-        $this->info("   • Run: php artisan parse:all-obi --skip-existing");
-        $this->info("   • Force rescan: php artisan parse:all-obi --scan");
+        $this->info("\n🎯 Следующие шаги:");
+        $this->info("   • Запустить: php artisan parse:all-obi --with-rates --limit=100");
+        $this->info("   • Запустить: php artisan parse:all-obi --skip-existing");
+        $this->info("   • Принудительное сканирование: php artisan parse:all-obi --scan");
+        $this->info("   • Обновить картинки: php artisan parse:all-obi --update-images");
     }
 }

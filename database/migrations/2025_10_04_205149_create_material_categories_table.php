@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 100)->unique('material_categories_name_key');
             $table->integer('parent_id')->nullable();
+            $table->string('image_url')->nullable();
             $table->timestampTz('created_at')->nullable()->default(DB::raw("now()"));
         });
     }

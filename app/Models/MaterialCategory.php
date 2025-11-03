@@ -35,7 +35,7 @@ class MaterialCategory extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['id','name', 'parent_id', 'created_at'];
+    protected $fillable = ['id','name', 'parent_id','image_url','created_at'];
 
 }
 
