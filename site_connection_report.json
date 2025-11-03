@@ -1,66 +1,66 @@
 {
-    "successful": 4,
-    "failed": 6,
+    "successful": 7,
+    "failed": 3,
     "results": {
-        "leroymerlin.ru": {
+        "lemanapro.ru": {
             "success": false,
-            "error": "HTTP: 301",
-            "http_code": "301",
-            "time": 38.44
+            "error": "HTTP: 401",
+            "http_code": "401",
+            "time": 30.12
         },
-        "castorama.ru": {
-            "success": false,
-            "error": "file_get_contents(https:\/\/www.castorama.ru): Failed to open stream: php_network_getaddresses: getaddrinfo for www.castorama.ru failed: Этот хост неизвестен",
-            "http_code": 0,
-            "time": 0.19
+        "stroimaterial-moskva.ru": {
+            "success": true,
+            "error": "",
+            "http_code": 200,
+            "time": 1.37
         },
         "petrovich.ru": {
             "success": false,
             "error": "HTTP: 307",
             "http_code": "307",
-            "time": 31.97
+            "time": 32.51
         },
         "maxidom.ru": {
             "success": true,
             "error": "",
             "http_code": 200,
-            "time": 0.29
+            "time": 0.27
         },
         "stroylandiya.ru": {
             "success": true,
             "error": "",
             "http_code": 200,
-            "time": 0.57
+            "time": 0.54
         },
         "obi.ru": {
             "success": true,
             "error": "",
             "http_code": 200,
-            "time": 0.62
+            "time": 0.57
         },
         "vseinstrumenti.ru": {
             "success": false,
             "error": "HTTP: 403",
             "http_code": "403",
-            "time": 30.09
+            "time": 30.13
         },
         "stroyka.ru": {
             "success": true,
             "error": "",
             "http_code": 200,
-            "time": 0.54
+            "time": 0.45
         },
-        "homehardware.ru": {
-            "success": false,
-            "error": "HTTP: 403",
-            "http_code": "403",
-            "time": 0.15
+        "msk.saturn.net": {
+            "success": true,
+            "error": "",
+            "http_code": 200,
+            "time": 1.06
         },
-        "tdsaturn.ru": {
-            "success": false,
-            "error": "file_get_contents(https:\/\/tdsaturn.ru): Failed to open stream: Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение",
-            "http_code": 0,
-            "time": 4.25
+        "stroymateriyali.ru": {
+            "success": true,
+            "error": "",
+            "http_code": 200,
+            "time": 0.48
         }
     }
 }

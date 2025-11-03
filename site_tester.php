@@ -19,16 +19,16 @@ class SiteConnectionTester
     public function testPopularSites()
     {
         $sites = [
-            'leroymerlin.ru' => 'https://leroymerlin.ru',
-            'castorama.ru' => 'https://www.castorama.ru',
+            'lemanapro.ru' => 'https://lemanapro.ru',
+            'stroimaterial-moskva.ru' => 'https://stroimaterial-moskva.ru',
             'petrovich.ru' => 'https://petrovich.ru',
             'maxidom.ru' => 'https://www.maxidom.ru',
             'stroylandiya.ru' => 'https://stroylandiya.ru',
             'obi.ru' => 'https://www.obi.ru',
             'vseinstrumenti.ru' => 'https://vseinstrumenti.ru',
             'stroyka.ru' => 'https://stroyka.ru',
-            'homehardware.ru' => 'https://homehardware.ru',
-            'tdsaturn.ru' => 'https://tdsaturn.ru',
+            'msk.saturn.net' => 'https://msk.saturn.net',
+            'stroymateriyali.ru' => 'https://stroymateriyali.ru',
         ];
 
         $results = [];
@@ -50,7 +50,7 @@ class SiteConnectionTester
         return $results;
     }
 
-    private function testSite($url)
+    public function testSite($url)
     {
         $startTime = microtime(true);
 
@@ -169,7 +169,7 @@ class SiteConnectionTester
         ];
     }
 
-    private function getRandomUserAgent()
+    public function getRandomUserAgent()
     {
         return $this->userAgents[array_rand($this->userAgents)];
     }
