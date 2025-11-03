@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MaterialsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -37,5 +38,6 @@ Route::get('/project/{id}', function ($id) {
     return view('project.show', ['projectId' => $id]);
 })->name('project.show');
 
+Route::get('/categories/brick/materials', [MaterialsController::class, 'indexWeb'])->name('materials.brick');
 
 Route::get('/test', fn() => view('test'));

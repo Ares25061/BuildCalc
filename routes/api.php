@@ -47,8 +47,6 @@ Route::delete('selectedProjectMaterials/{id}', [SelectedProjectMaterialsControll
 
 // Materials
 Route::apiResource('materials', MaterialsController::class);
-Route::patch('materials/{id}', [MaterialsController::class, 'update']);
-Route::delete('materials/{id}', [MaterialsController::class, 'destroy']);
 
 // Material categories
 Route::apiResource('materialCategories', MaterialCategoryController::class);

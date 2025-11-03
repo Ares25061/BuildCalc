@@ -4,15 +4,35 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Material;
+use App\Models\MaterialCategory;
 
 class MaterialsController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display materials page for web
+     */
+    public function indexWeb(Request $request)
+    {
+        $categoryName = $request->get('category', 'Кирпич и блоки');
+
+        // Get materials with relationships
+        $materials = Material::with(['category', 'latestPrice', 'supplier'])
+            ->whereHas('category', function($query) use ($categoryName) {
+                $query->where('name', $categoryName);
+            })
+            ->get();
+
+        $categories = MaterialCategory::whereNotNull('parent_id')->get();
+
+        return view('materials.index', compact('materials', 'categories', 'categoryName'));
+    }
+
+    /**
+     * Display a listing of the resource (API).
      */
     public function index()
     {
-        $materials = Material::get();
+        $materials = Material::with(['category', 'latestPrice'])->get();
         return response()->json($materials);
     }
 
@@ -21,7 +41,8 @@ class MaterialsController extends Controller
      */
     public function store(Request $request)
     {
-        Material::create($request->input());
+        $material = Material::create($request->all());
+        return response()->json($material, 201);
     }
 
     /**
@@ -29,7 +50,12 @@ class MaterialsController extends Controller
      */
     public function show(string $id)
     {
-        $material = Material::find($id);
+        $material = Material::with(['category', 'latestPrice', 'supplier'])->find($id);
+
+        if (!$material) {
+            return response()->json(['message' => 'Material not found'], 404);
+        }
+
         return response()->json($material);
     }
 
@@ -39,17 +65,12 @@ class MaterialsController extends Controller
     public function update(Request $request, string $id)
     {
         $material = Material::find($id);
-        $material->name = $request->name;
-        $material->category_id = $request->category_id;
-        $material->description = $request->description;
-        $material->unit = $request->unit;
-        $material->article = $request->article;
-        $material->image_url = $request->image_url;
-        $material->created_at = $request->created_at;
-        $material->updated_at = $request->updated_at;
-        $material->supplier_id = $request->supplier_id;
-        $material->external_id = $request->external_id;
-        $material->save();
+
+        if (!$material) {
+            return response()->json(['message' => 'Material not found'], 404);
+        }
+
+        $material->update($request->all());
         return response()->json($material);
     }
 
@@ -58,7 +79,13 @@ class MaterialsController extends Controller
      */
     public function destroy(string $id)
     {
-        Material::destroy($id);
-        return response()->json(['message' => 'Deleted']);
+        $material = Material::find($id);
+
+        if (!$material) {
+            return response()->json(['message' => 'Material not found'], 404);
+        }
+
+        $material->delete();
+        return response()->json(['message' => 'Material deleted']);
     }
 }
