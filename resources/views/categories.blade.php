@@ -23,7 +23,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center mx-auto">
 
         @forelse($categories as $category)
-            <a href="{{ url('/categories/' . ($category->slug ?? str_replace(' ', '_', $category->name)) . '/materials') }}"
+            <a href="{{ url('/categories/' . ($category->slug ?? str_replace(' ', '_', $category->name))) }}"
                class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col h-full">
                 <div class="h-40 bg-gray-50 flex items-center justify-center p-4">
                     <img src="{{ $category->image_url }}"

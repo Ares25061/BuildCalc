@@ -19,8 +19,8 @@ Route::get('/register', function () {
 // Категории
 Route::get('/categories', [MaterialCategoryController::class, 'indexWeb'])->name('categories.index');
 
-// Материалы конкретной категории
-Route::get('/categories/{slug}/materials', [MaterialCategoryController::class, 'showCategoryMaterials'])->name('categories.materials');
+// Материалы конкретной категории (обновленный маршрут без /materials)
+Route::get('/categories/{slug}', [MaterialCategoryController::class, 'showCategoryMaterials'])->name('categories.materials');
 
 // Старые маршруты для обратной совместимости
 Route::get('/materials/{id}', fn($id) => view('materials'));
