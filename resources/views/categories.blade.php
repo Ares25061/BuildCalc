@@ -19,100 +19,46 @@
 </div>
 
 <!-- Категории -->
-<div class="max-w-7xl mx-auto py-12 px-4 ">
+<div class="max-w-7xl mx-auto py-12 px-4">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center mx-auto">
 
-
-    <!-- Кирпич -->
-        <a href="/categories/brick/materials"
-           class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col h-full">
-            <div class="h-40 bg-gray-50 flex items-center justify-center p-4">
-                <img src="https://i.freza.co/diygoods/52792/kirpich_oblitsovochniy_odinarniy_m150_1_pic.jpg"
-                     class="h-full object-contain group-hover:scale-110 transition duration-300"/>
+        @forelse($categories as $category)
+            <a href="{{ url('/categories/' . ($category->slug ?? str_replace(' ', '_', $category->name)) . '/materials') }}"
+               class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col h-full">
+                <div class="h-40 bg-gray-50 flex items-center justify-center p-4">
+                    <img src="{{ $category->image_url }}"
+                         alt="{{ $category->name }}"
+                         class="h-full object-contain group-hover:scale-110 transition duration-300"
+                         onerror="this.src='https://via.placeholder.com/300x200?text={{ urlencode($category->name) }}'"/>
+                </div>
+                <div class="p-6 flex-grow">
+                    <h3 class="text-xl font-semibold text-gray-900 group-hover:text-orange-500 transition">
+                        {{ $category->name }}
+                    </h3>
+                    <p class="text-gray-600 text-sm mt-2">
+                        @if(isset($category->materials_count) && $category->materials_count > 0)
+                            {{ $category->materials_count }} материалов
+                        @else
+                            Материалы скоро появятся
+                        @endif
+                    </p>
+                </div>
+            </a>
+        @empty
+            <div class="col-span-full text-center py-12">
+                <div class="text-gray-500 text-lg">
+                    Категории не найдены
+                </div>
+                <p class="text-gray-400 mt-2">
+                    Запустите парсер для получения категорий с OBI
+                </p>
+                <div class="mt-4">
+                    <a href="/" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
+                        На главную
+                    </a>
+                </div>
             </div>
-            <div class="p-6 flex-grow">
-                <h3 class="text-xl font-semibold text-gray-900 group-hover:text-orange-500 transition">Кирпичи</h3>
-                <p class="text-gray-600 text-sm mt-2">Керамический, облицовочный и др.</p>
-            </div>
-        </a>
-
-        <!-- Обои -->
-        <a href="/materials/wallpaper"
-           class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col h-full">
-            <div class="h-40 bg-gray-50 flex items-center justify-center p-4">
-                <img src="https://avatars.mds.yandex.net/i?id=f8d14db81b1683f72dcde990a1a8e475_l-5285824-images-thumbs&n=13"
-                     class="h-full object-contain group-hover:scale-110 transition duration-300"/>
-            </div>
-            <div class="p-6 flex-grow">
-                <h3 class="text-xl font-semibold text-gray-900 group-hover:text-orange-500 transition">Обои</h3>
-                <p class="text-gray-600 text-sm mt-2">Флизелиновые, виниловые, бумажные</p>
-            </div>
-        </a>
-
-        <!-- Шпатлевка -->
-        <a href="/materials/putty"
-           class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col h-full">
-            <div class="h-40 bg-gray-50 flex items-center justify-center p-4">
-                <img src="https://www.lavon-shop.ru/wa-data/public/shop/categories/48/61.jpg"
-                     class="h-full object-contain group-hover:scale-110 transition duration-300"/>
-            </div>
-            <div class="p-6 flex-grow">
-                <h3 class="text-xl font-semibold text-gray-900 group-hover:text-orange-500 transition">Шпатлевка</h3>
-                <p class="text-gray-600 text-sm mt-2">Стартовая, финишная, универсальная</p>
-            </div>
-        </a>
-
-        <!-- Ламинат -->
-        <a href="/materials/laminate"
-           class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col h-full">
-            <div class="h-40 bg-gray-50 flex items-center justify-center p-4">
-                <img src="https://avatars.mds.yandex.net/i?id=329bf69b8ccb9032b354ab362bd361f7_l-5603489-images-thumbs&n=13"
-                     class="h-full object-contain group-hover:scale-110 transition duration-300"/>
-            </div>
-            <div class="p-6 flex-grow">
-                <h3 class="text-xl font-semibold text-gray-900 group-hover:text-orange-500 transition">Ламинат</h3>
-                <p class="text-gray-600 text-sm mt-2">Напольные покрытия</p>
-            </div>
-        </a>
-
-        <!-- Краска -->
-        <a href="/materials/paint"
-           class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col h-full">
-            <div class="h-40 bg-gray-50 flex items-center justify-center p-4">
-                <img src="https://avatars.mds.yandex.net/i?id=9b8bb59788106aac9a5dc186c77a33e6bb57f285-3071255-images-thumbs&n=13"
-                     class="h-full object-contain group-hover:scale-110 transition duration-300"/>
-            </div>
-            <div class="p-6 flex-grow">
-                <h3 class="text-xl font-semibold text-gray-900 group-hover:text-orange-500 transition">Краска</h3>
-                <p class="text-gray-600 text-sm mt-2">Интерьерная, фасадная, акриловая</p>
-            </div>
-        </a>
-
-        <!-- Плитка -->
-        <a href="/materials/tile"
-           class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col h-full">
-            <div class="h-40 bg-gray-50 flex items-center justify-center p-4">
-                <img src="https://avatars.mds.yandex.net/i?id=693837bffcd64b1ab70940b977a95af9e824a1bf-10089679-images-thumbs&n=13"
-                     class="h-full object-contain group-hover:scale-110 transition duration-300"/>
-            </div>
-            <div class="p-6 flex-grow">
-                <h3 class="text-xl font-semibold text-gray-900 group-hover:text-orange-500 transition">Плитка</h3>
-                <p class="text-gray-600 text-sm mt-2">Керамическая и керамогранит</p>
-            </div>
-        </a>
-
-        <a href="/materials/cement"
-           class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col h-full">
-            <div class="h-40 bg-gray-50 flex items-center justify-center p-4">
-                <img src="https://cdnstatic.rg.ru/uploads/attachments/article/183/65/75/0002.jpg"
-                     class="h-full object-contain group-hover:scale-110 transition duration-300"/>
-            </div>
-            <div class="p-6 flex-grow">
-                <h3 class="text-xl font-semibold text-gray-900 group-hover:text-orange-500 transition">Цемент</h3>
-                <p class="text-gray-600 text-sm mt-2">Смеси и сыпучие материалы</p>
-            </div>
-        </a>
-
+        @endforelse
 
     </div>
 </div>

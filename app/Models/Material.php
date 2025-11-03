@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Material extends Model
 {
@@ -102,7 +103,7 @@ class Material extends Model
     /**
      * Relationship with category
      */
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(MaterialCategory::class, 'category_id');
     }
@@ -113,6 +114,14 @@ class Material extends Model
     public function latestPrice()
     {
         return $this->hasOne(MaterialPrice::class, 'material_id')->latestOfMany();
+    }
+
+    /**
+     * Relationship with all prices
+     */
+    public function prices()
+    {
+        return $this->hasMany(MaterialPrice::class, 'material_id');
     }
 
     /**

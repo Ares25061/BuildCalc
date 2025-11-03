@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MaterialCategoryController;
 use App\Http\Controllers\MaterialsController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,29 +16,25 @@ Route::get('/register', function () {
     return view('register');
 })->name('register');
 
+// Категории
+Route::get('/categories', [MaterialCategoryController::class, 'indexWeb'])->name('categories.index');
 
-Route::get('/categories', fn() => view('categories'));
+// Материалы конкретной категории
+Route::get('/categories/{slug}/materials', [MaterialCategoryController::class, 'showCategoryMaterials'])->name('categories.materials');
 
+// Старые маршруты для обратной совместимости
 Route::get('/materials/{id}', fn($id) => view('materials'));
 
-Route::get('/categories/{slug}/materials', function ($slug) {
-    return view('materials');
-})->name('categories.materials');
-
 Route::get('/project', function () {
-    return view('project'); // страница со списком смет
+    return view('project');
 })->name('project.index');
 
 Route::get('/project/create', function () {
-    // Здесь будет форма создания сметы
     return view('project.create');
 })->name('project.create');
 
 Route::get('/project/{id}', function ($id) {
-    // Передаем ID в представление, если нужно
     return view('project.show', ['projectId' => $id]);
 })->name('project.show');
-
-Route::get('/categories/brick/materials', [MaterialsController::class, 'indexWeb'])->name('materials.brick');
 
 Route::get('/test', fn() => view('test'));

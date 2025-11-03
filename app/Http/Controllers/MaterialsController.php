@@ -9,30 +9,43 @@ use App\Models\MaterialCategory;
 class MaterialsController extends Controller
 {
     /**
-     * Display materials page for web
+     * Display materials page for specific category
      */
-    public function indexWeb(Request $request)
+    public function showCategoryMaterials($slug)
     {
-        $categoryName = $request->get('category', 'Кирпич и блоки');
+        // Заменяем нижние подчёркивания обратно на пробелы
+        $categoryName = str_replace('_', ' ', $slug);
 
-        // Get materials with relationships
-        $materials = Material::with(['category', 'latestPrice', 'supplier'])
-            ->whereHas('category', function($query) use ($categoryName) {
-                $query->where('name', $categoryName);
-            })
+        // Ищем категорию по slug или имени
+        $category = MaterialCategory::where('slug', $slug)
+            ->orWhere('name', $categoryName)
+            ->firstOrFail();
+
+        // Get materials for this category with relationships
+        $materials = Material::with(['category', 'prices', 'supplier'])
+            ->where('category_id', $category->id)
             ->get();
 
+        // Get all categories for navigation
         $categories = MaterialCategory::whereNotNull('parent_id')->get();
 
-        return view('materials.index', compact('materials', 'categories', 'categoryName'));
+        return view('materials', compact('materials', 'categories', 'category'));
     }
 
     /**
      * Display a listing of the resource (API).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $materials = Material::with(['category', 'latestPrice'])->get();
+        $query = Material::with(['category', 'prices', 'supplier']);
+
+        // Filter by category if provided
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        $materials = $query->get();
+
         return response()->json($materials);
     }
 
@@ -50,7 +63,7 @@ class MaterialsController extends Controller
      */
     public function show(string $id)
     {
-        $material = Material::with(['category', 'latestPrice', 'supplier'])->find($id);
+        $material = Material::with(['category', 'prices', 'supplier'])->find($id);
 
         if (!$material) {
             return response()->json(['message' => 'Material not found'], 404);
