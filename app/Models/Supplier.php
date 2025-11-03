@@ -43,7 +43,9 @@ class Supplier extends Model
         'id',
         'name',
         'base_url',
-        'is_active'
+        'is_active',
+        'created_at',
+        'updated_at'
     ];
 
     /**

@@ -42,6 +42,8 @@ class SuppliersController extends Controller
         $supplier->name = $request->name;
         $supplier->base_url = $request->base_url;
         $supplier->is_active = $request->is_active;
+        $supplier->created_at = $request->created_at;
+        $supplier->updated_at = $request->updated_at;
         $supplier->save();
         return response()->json($supplier);
     }

@@ -37,6 +37,8 @@ class BasicDataSeeder extends Seeder
             [
                 'base_url' => 'https://obi.ru',
                 'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
         );
 
