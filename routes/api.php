@@ -85,6 +85,13 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/projects/{projectId}/materials/{materialId}', [ProjectsController::class, 'updateMaterial']);
     Route::delete('/projects/{projectId}/materials/{materialId}', [ProjectsController::class, 'removeMaterial']);
 
+    // Work positions management
+    Route::get('/projects/{projectId}/items', [ProjectsController::class, 'getProjectItems'])->middleware('auth:api');
+    Route::post('/projects/{projectId}/items', [ProjectsController::class, 'addWorkPosition'])->middleware('auth:api');
+    Route::put('/projects/{projectId}/items/{itemId}', [ProjectsController::class, 'updateWorkPosition'])->middleware('auth:api');
+    Route::delete('/projects/{projectId}/items/{itemId}', [ProjectsController::class, 'deleteWorkPosition'])->middleware('auth:api');
+    Route::post('/projects/{projectId}/items/reorder', [ProjectsController::class, 'reorderWorkPositions'])->middleware('auth:api');
+
     // Project items
     Route::apiResource('projectItems', ProjectItemsController::class);
     Route::patch('projectItems/{id}', [ProjectItemsController::class, 'update']);

@@ -175,6 +175,229 @@ class ProjectsController extends Controller
         }
     }
     /**
+     * Get project items with materials
+     */
+    public function getProjectItems($projectId)
+    {
+        $project = Project::where('user_id', Auth::id())->find($projectId);
+
+        if (!$project) {
+            return response()->json(['message' => 'Project not found'], 404);
+        }
+
+        try {
+            $projectItems = ProjectItem::where('project_id', $projectId)
+                ->with(['workType', 'selectedMaterials.material.prices', 'selectedMaterials.material.supplier'])
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function($item) {
+                    $materials = $item->selectedMaterials->map(function($selectedMaterial) {
+                        $material = $selectedMaterial->material;
+                        $latestPrice = $material->prices->last();
+
+                        return [
+                            'id' => $selectedMaterial->id,
+                            'material_id' => $material->id,
+                            'name' => $material->name,
+                            'description' => $material->description,
+                            'unit' => $material->unit,
+                            'quantity' => (float) $selectedMaterial->quantity,
+                            'price' => $latestPrice ? (float) $latestPrice->price : 0,
+                            'total' => $latestPrice ? (float) $latestPrice->price * (float) $selectedMaterial->quantity : 0,
+                            'brand' => $material->brand,
+                            'color' => $material->color,
+                            'supplier' => $material->supplier,
+                        ];
+                    });
+
+                    $itemTotal = $materials->sum('total');
+
+                    return [
+                        'id' => $item->id,
+                        'work_type_id' => $item->work_type_id,
+                        'work_type_name' => $item->workType->name,
+                        'work_type_unit' => $item->workType->unit,
+                        'notes' => $item->notes,
+                        'sort_order' => $item->sort_order,
+                        'materials' => $materials,
+                        'item_total' => $itemTotal,
+                        'materials_count' => $materials->count(),
+                        'created_at' => $item->created_at,
+                    ];
+                });
+
+            return response()->json($projectItems);
+
+        } catch (\Exception $e) {
+            Log::error('Error getting project items: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Ошибка при получении позиций проекта',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Add work position to project
+     */
+    public function addWorkPosition(Request $request, $projectId)
+    {
+        $project = Project::where('user_id', Auth::id())->find($projectId);
+
+        if (!$project) {
+            return response()->json(['message' => 'Project not found'], 404);
+        }
+
+        $request->validate([
+            'work_type_id' => 'required|exists:work_types,id',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            // Get next sort order
+            $maxSortOrder = ProjectItem::where('project_id', $projectId)->max('sort_order') ?? 0;
+
+            $projectItem = ProjectItem::create([
+                'project_id' => $projectId,
+                'work_type_id' => $request->work_type_id,
+                'quantity' => 1,
+                'notes' => $request->notes ?? 'Новая позиция работ',
+                'sort_order' => $maxSortOrder + 1,
+                'created_at' => now()
+            ]);
+
+            $projectItem->load('workType');
+
+            return response()->json([
+                'message' => 'Work position added successfully',
+                'data' => $projectItem
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Error adding work position: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Ошибка при добавлении позиции работ',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update work position
+     */
+    public function updateWorkPosition(Request $request, $projectId, $itemId)
+    {
+        $project = Project::where('user_id', Auth::id())->find($projectId);
+
+        if (!$project) {
+            return response()->json(['message' => 'Project not found'], 404);
+        }
+
+        $projectItem = ProjectItem::where('id', $itemId)
+            ->where('project_id', $projectId)
+            ->first();
+
+        if (!$projectItem) {
+            return response()->json(['message' => 'Work position not found'], 404);
+        }
+
+        $request->validate([
+            'work_type_id' => 'sometimes|exists:work_types,id',
+            'notes' => 'nullable|string|max:500',
+            'sort_order' => 'sometimes|integer',
+        ]);
+
+        try {
+            $projectItem->update($request->only(['work_type_id', 'notes', 'sort_order']));
+
+            $projectItem->load('workType');
+
+            return response()->json([
+                'message' => 'Work position updated successfully',
+                'data' => $projectItem
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error updating work position: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Ошибка при обновлении позиции работ',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete work position
+     */
+    public function deleteWorkPosition($projectId, $itemId)
+    {
+        $project = Project::where('user_id', Auth::id())->find($projectId);
+
+        if (!$project) {
+            return response()->json(['message' => 'Project not found'], 404);
+        }
+
+        $projectItem = ProjectItem::where('id', $itemId)
+            ->where('project_id', $projectId)
+            ->first();
+
+        if (!$projectItem) {
+            return response()->json(['message' => 'Work position not found'], 404);
+        }
+
+        try {
+            // Delete associated materials first
+            SelectedProjectMaterial::where('project_item_id', $itemId)->delete();
+
+            // Delete the work position
+            $projectItem->delete();
+
+            return response()->json(['message' => 'Work position deleted successfully']);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting work position: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Ошибка при удалении позиции работ',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reorder work positions
+     */
+    public function reorderWorkPositions(Request $request, $projectId)
+    {
+        $project = Project::where('user_id', Auth::id())->find($projectId);
+
+        if (!$project) {
+            return response()->json(['message' => 'Project not found'], 404);
+        }
+
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:project_items,id',
+            'items.*.sort_order' => 'required|integer',
+        ]);
+
+        try {
+            foreach ($request->items as $item) {
+                ProjectItem::where('id', $item['id'])
+                    ->where('project_id', $projectId)
+                    ->update(['sort_order' => $item['sort_order']]);
+            }
+
+            return response()->json(['message' => 'Work positions reordered successfully']);
+
+        } catch (\Exception $e) {
+            Log::error('Error reordering work positions: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Ошибка при изменении порядка позиций',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    /**
      * Add material to project
      */
     public function addMaterial(Request $request, $projectId)
@@ -185,68 +408,79 @@ class ProjectsController extends Controller
             'request_data' => $request->all()
         ]);
 
+        $project = Project::where('user_id', Auth::id())->find($projectId);
+
+        if (!$project) {
+            Log::warning('Project not found', ['project_id' => $projectId]);
+            return response()->json(['message' => 'Project not found'], 404);
+        }
+
+        $request->validate([
+            'material_id' => 'required|exists:materials,id',
+            'quantity' => 'required|numeric|min:0.001',
+            'project_item_id' => 'nullable|exists:project_items,id' // Добавляем возможность указать позицию
+        ]);
+
         try {
-            // Проверяем проект
-            $project = Project::where('user_id', Auth::id())->find($projectId);
-            if (!$project) {
-                Log::warning('Project not found', ['project_id' => $projectId]);
-                return response()->json(['message' => 'Project not found'], 404);
-            }
+            $projectItemId = $request->project_item_id;
 
-            // Валидация
-            $request->validate([
-                'material_id' => 'required|exists:materials,id',
-                'quantity' => 'required|numeric|min:0.001'
-            ]);
+            // Если project_item_id не указан, используем логику по умолчанию
+            if (!$projectItemId) {
+                Log::info('No project_item_id provided, using default logic');
 
-            Log::info('Validation passed');
+                // Получаем или создаем базовый work_type для материалов
+                $workType = WorkType::firstOrCreate(
+                    ['id' => 1],
+                    [
+                        'name' => 'Материалы',
+                        'description' => 'Основные материалы проекта',
+                        'unit' => 'шт',
+                        'created_at' => now()
+                    ]
+                );
 
-            // Проверяем существование work_type с id=1
-            $workType = WorkType::find(1);
-            if (!$workType) {
-                Log::info('Work type 1 not found, creating...');
-                $workType = WorkType::create([
-                    'id' => 1,
-                    'name' => 'Материалы',
-                    'description' => 'Основные материалы проекта',
-                    'unit' => 'шт',
-                    'created_at' => now()
-                ]);
-                Log::info('Work type created', ['id' => $workType->id]);
-            }
-
-            // Ищем или создаем project_item БЕЗ updated_at
-            $projectItem = ProjectItem::where('project_id', $projectId)
-                ->where('work_type_id', 1)
-                ->first();
-
-            if (!$projectItem) {
-                Log::info('Creating new project item');
-                $projectItem = ProjectItem::create([
+                // Создаем или находим project_item для этого проекта
+                $projectItem = ProjectItem::firstOrCreate([
                     'project_id' => $projectId,
-                    'work_type_id' => 1,
+                    'work_type_id' => $workType->id,
+                ], [
                     'quantity' => 1,
                     'notes' => 'Материалы проекта',
                     'sort_order' => 0,
                     'created_at' => now()
                 ]);
-                Log::info('Project item created', ['id' => $projectItem->id]);
+
+                $projectItemId = $projectItem->id;
+                Log::info('Using default project item', ['project_item_id' => $projectItemId]);
+            } else {
+                // Проверяем, что указанная позиция принадлежит проекту
+                $projectItem = ProjectItem::where('id', $projectItemId)
+                    ->where('project_id', $projectId)
+                    ->first();
+
+                if (!$projectItem) {
+                    return response()->json(['message' => 'Work position not found in project'], 404);
+                }
+                Log::info('Using specified project item', ['project_item_id' => $projectItemId]);
             }
 
-            // Проверяем, есть ли уже такой материал
-            $existingMaterial = SelectedProjectMaterial::where('project_item_id', $projectItem->id)
+            // Проверяем, есть ли уже такой материал в указанной позиции
+            $existingMaterial = SelectedProjectMaterial::where('project_item_id', $projectItemId)
                 ->where('material_id', $request->material_id)
                 ->first();
 
             if ($existingMaterial) {
-                // Обновляем количество
-                $newQuantity = $existingMaterial->quantity + $request->quantity;
-                $existingMaterial->update(['quantity' => $newQuantity]);
+                // Если материал уже есть, обновляем количество
+                $existingMaterial->update([
+                    'quantity' => $existingMaterial->quantity + $request->quantity
+                ]);
+
+                $existingMaterial->load(['material', 'material.prices', 'material.supplier']);
 
                 Log::info('Material quantity updated', [
                     'material_id' => $request->material_id,
-                    'old_quantity' => $existingMaterial->quantity,
-                    'new_quantity' => $newQuantity
+                    'project_item_id' => $projectItemId,
+                    'new_quantity' => $existingMaterial->quantity
                 ]);
 
                 return response()->json([
@@ -255,36 +489,38 @@ class ProjectsController extends Controller
                 ]);
             }
 
-            // Создаем новую запись
-            Log::info('Creating new selected project material');
+            // Создаем новую запись в указанной позиции
             $selectedMaterial = SelectedProjectMaterial::create([
-                'project_item_id' => $projectItem->id,
+                'project_item_id' => $projectItemId,
                 'material_id' => $request->material_id,
                 'quantity' => $request->quantity,
                 'created_at' => now()
             ]);
 
-            Log::info('Material added successfully', [
+            Log::info('New material added to specific position', [
                 'selected_material_id' => $selectedMaterial->id,
-                'project_item_id' => $projectItem->id,
-                'material_id' => $request->material_id
+                'material_id' => $request->material_id,
+                'project_item_id' => $projectItemId
             ]);
+
+            // Загружаем связанные данные для ответа
+            $selectedMaterial->load(['material', 'material.prices', 'material.supplier']);
+
+            // Обновляем общую стоимость проекта
+            $this->updateProjectTotalCost($projectId);
 
             return response()->json([
                 'message' => 'Material added to project',
-                'data' => [
-                    'id' => $selectedMaterial->id,
-                    'material_id' => $selectedMaterial->material_id,
-                    'quantity' => $selectedMaterial->quantity
-                ]
+                'data' => $selectedMaterial
             ], 201);
 
         } catch (\Exception $e) {
-            Log::error('FINAL ERROR in addMaterial: ' . $e->getMessage());
+            Log::error('Error adding material to project: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
-
             return response()->json([
-                'message' => 'Error adding material to project: ' . $e->getMessage()
+                'message' => 'Error adding material to project',
+                'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
             ], 500);
         }
     }

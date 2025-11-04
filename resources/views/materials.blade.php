@@ -305,6 +305,7 @@
     let filteredMaterials = [];
     let userProjects = [];
     let selectedMaterial = null;
+    let selectedWorkPositionId = null;
     const currentCategoryId = {{ $category->id }};
     const urlParams = new URLSearchParams(window.location.search);
     const projectIdFromUrl = urlParams.get('project_id');
@@ -564,17 +565,139 @@
             price: material.prices && material.prices.length > 0 ? material.prices[material.prices.length - 1].price : 0
         };
 
-        // Show project selector
+        // Сбрасываем выбранную позицию
+        selectedWorkPositionId = null;
+
+        // Сначала выбираем проект
         showProjectSelector();
+    }
+
+    // Загрузка позиций для выбранного проекта
+    async function loadWorkPositionsForProject() {
+        const projectSelect = document.getElementById('project-select');
+        const selectedProjectId = projectSelect.value;
+
+        if (!selectedProjectId) {
+            alert('Пожалуйста, выберите проект');
+            return;
+        }
+
+        const token = localStorage.getItem('auth_token');
+
+        try {
+            const response = await fetch(`/api/projects/${selectedProjectId}/items`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const workPositions = await response.json();
+                showWorkPositionSelector(workPositions, selectedProjectId);
+            } else {
+                throw new Error('Не удалось загрузить позиции работ');
+            }
+        } catch (error) {
+            console.error('Error loading work positions:', error);
+            showError('Ошибка при загрузке позиций работ: ' + error.message);
+        }
+    }
+
+    // Показать выбор позиции работ
+    function showWorkPositionSelector(workPositions, projectId) {
+        const selector = document.getElementById('project-selector');
+        if (!selector) return;
+
+        let positionsHTML = '';
+
+        if (workPositions.length > 0) {
+            positionsHTML = `
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Выберите позицию работ:</label>
+                <select id="work-position-select" class="w-full border border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:ring-orange-500">
+                    <option value="">Автоматически (создать новую позицию "Материалы")</option>
+                    ${workPositions.map(position => `
+                        <option value="${position.id}">${position.work_type_name}${position.notes ? ` - ${position.notes}` : ''} (${position.materials_count} материалов)</option>
+                    `).join('')}
+                </select>
+            </div>
+        `;
+        } else {
+            positionsHTML = `
+            <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p class="text-sm text-blue-700">В проекте пока нет позиций работ. Материал будет добавлен в новую позицию "Материалы".</p>
+            </div>
+        `;
+        }
+
+        selector.innerHTML = `
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900">Добавить материал в смету</h3>
+                <p class="text-sm text-gray-600">Выберите позицию для добавления материала</p>
+            </div>
+            <button onclick="hideProjectSelector()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="mt-4">
+            <div class="mb-3 p-3 bg-gray-50 rounded-lg">
+                <p class="text-sm font-medium text-gray-700">Проект: <span id="selected-project-name">${document.getElementById('project-select').options[document.getElementById('project-select').selectedIndex].text}</span></p>
+            </div>
+            ${positionsHTML}
+            <div class="mt-3 flex gap-3">
+                <button onclick="addToSelectedProjectAndPosition(${projectId})" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex-1">
+                    Добавить в смету
+                </button>
+                <button onclick="showProjectSelector()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+                    Назад
+                </button>
+            </div>
+        </div>
+    `;
+
+        selector.classList.remove('hidden');
     }
 
     // Показать выбор проекта
     function showProjectSelector() {
         const selector = document.getElementById('project-selector');
-        if (selector) {
-            selector.classList.remove('hidden');
-            selector.scrollIntoView({ behavior: 'smooth' });
-        }
+        if (!selector) return;
+
+        selector.innerHTML = `
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900">Добавить материал в смету</h3>
+                <p class="text-sm text-gray-600">Выберите проект для добавления материалов</p>
+            </div>
+            <button onclick="hideProjectSelector()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="mt-4">
+            <select id="project-select" class="w-full border border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:ring-orange-500">
+                <option value="">Выберите проект...</option>
+            </select>
+            <div class="mt-3 flex gap-3">
+                <button onclick="loadWorkPositionsForProject()" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex-1">
+                    Продолжить
+                </button>
+                <a href="/project/create" class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition text-center flex items-center justify-center">
+                    Новый проект
+                </a>
+            </div>
+        </div>
+    `;
+
+        populateProjectSelector();
+        selector.classList.remove('hidden');
+        selector.scrollIntoView({ behavior: 'smooth' });
     }
 
     // Скрыть выбор проекта
@@ -584,19 +707,10 @@
             selector.classList.add('hidden');
         }
         selectedMaterial = null;
+        selectedWorkPositionId = null;
     }
-
-    // Добавить материал в выбранный проект
-    // Добавить материал в выбранный проект
-    async function addToSelectedProject() {
-        const projectSelect = document.getElementById('project-select');
-        const selectedProjectId = projectSelect.value;
-
-        if (!selectedProjectId) {
-            alert('Пожалуйста, выберите проект');
-            return;
-        }
-
+    // Добавить материал в выбранный проект и позицию
+    async function addToSelectedProjectAndPosition(projectId) {
         if (!selectedMaterial) {
             alert('Ошибка: материал не выбран');
             return;
@@ -605,28 +719,39 @@
         const token = localStorage.getItem('auth_token');
         if (!token) {
             alert('Ошибка авторизации');
-            window.location.href = '/login';
             return;
         }
 
+        // Получаем выбранную позицию
+        const workPositionSelect = document.getElementById('work-position-select');
+        const selectedWorkPositionId = workPositionSelect ? workPositionSelect.value : null;
+
         try {
             console.log('Sending request to add material:', {
-                projectId: selectedProjectId,
+                projectId: projectId,
                 materialId: selectedMaterial.id,
-                quantity: selectedMaterial.quantity
+                quantity: selectedMaterial.quantity,
+                project_item_id: selectedWorkPositionId || null
             });
 
-            const response = await fetch(`/api/projects/${selectedProjectId}/materials`, {
+            const requestBody = {
+                material_id: selectedMaterial.id,
+                quantity: selectedMaterial.quantity
+            };
+
+            // Добавляем project_item_id только если он выбран
+            if (selectedWorkPositionId) {
+                requestBody.project_item_id = selectedWorkPositionId;
+            }
+
+            const response = await fetch(`/api/projects/${projectId}/materials`, {
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + token,
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({
-                    material_id: selectedMaterial.id,
-                    quantity: selectedMaterial.quantity
-                })
+                body: JSON.stringify(requestBody)
             });
 
             console.log('Response status:', response.status);
@@ -634,13 +759,20 @@
             if (response.ok) {
                 const result = await response.json();
                 console.log('Success response:', result);
-                showSuccess('Материал добавлен в смету!');
+
+                let successMessage = 'Материал добавлен в смету!';
+                if (selectedWorkPositionId) {
+                    const positionName = document.getElementById('work-position-select').options[document.getElementById('work-position-select').selectedIndex].text;
+                    successMessage = `Материал добавлен в позицию "${positionName.split(' (')[0]}"!`;
+                }
+
+                showSuccess(successMessage);
                 hideProjectSelector();
 
                 // Redirect to project page if project_id was in URL
                 if (projectIdFromUrl) {
                     setTimeout(() => {
-                        window.location.href = `/project/${selectedProjectId}`;
+                        window.location.href = `/project/${projectId}`;
                     }, 1500);
                 }
             } else {
@@ -655,7 +787,6 @@
                         errorMessage += ': ' + errorData.error;
                     }
                 } catch (parseError) {
-                    // Если не удалось распарсить JSON
                     const textError = await response.text();
                     console.error('Error response text:', textError);
                     errorMessage = textError || errorMessage;
