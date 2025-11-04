@@ -78,7 +78,7 @@
 
         <!-- ✅ Карточки -->
         <section>
-            <div id="materials-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div id="materials-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 <!-- Loading state -->
                 <div id="loading-state" class="col-span-3 text-center py-12">
                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
@@ -88,7 +88,7 @@
         </section>
 
         <!-- ✅ Калькулятор -->
-        <aside class="bg-white p-6 shadow-md rounded-2xl border border-gray-200 space-y-4 h-fit top-6 self-start">
+        <aside class="bg-white p-6 shadow-md rounded-2xl border border-gray-200 space-y-4 h-fit top-6 self-start" >
             <h3 class="text-lg font-semibold text-gray-900 gap-2 text-center">Калькулятор</h3>
 
             <!-- Динамический калькулятор в зависимости от категории -->
@@ -128,7 +128,96 @@
                         <option>2 кирпича</option>
                     </select>
                 </div>
-            @elseif(str_contains(strtolower($category->name), 'краск'))
+            @elseif(str_contains(strtolower($category->name), 'обои'))
+                <!-- Калькулятор обоев -->
+                <!-- Компактный калькулятор обоев -->
+                <div class="space-y-3">
+                    <!-- Размеры комнаты -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-xs text-gray-700 font-medium">Ширина комнаты</label>
+                            <div class="relative mt-1">
+                                <input type="number" value="4" class="w-full border border-gray-300 rounded-lg p-2 pr-6 text-xs focus:border-orange-500 focus:ring-orange-500">
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-xs">м</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-700 font-medium">Длина комнаты</label>
+                            <div class="relative mt-1">
+                                <input type="number" value="4" class="w-full border border-gray-300 rounded-lg p-2 pr-6 text-xs focus:border-orange-500 focus:ring-orange-500">
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-xs">м</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-gray-700 font-medium">Высота комнаты</label>
+                        <div class="relative mt-1">
+                            <input type="number" value="2.7" class="w-full border border-gray-300 rounded-lg p-2 pr-6 text-xs focus:border-orange-500 focus:ring-orange-500">
+                            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-xs">м</span>
+                        </div>
+                    </div>
+
+                    <!-- Окна и двери в аккордеоне -->
+                    <div x-data="{ open: false }" class="border border-gray-200 rounded-lg">
+                        <button @click="open = !open" class="w-full flex items-center justify-between p-2 text-xs font-medium text-gray-700">
+                            <span>Окна и двери</span>
+                            <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" class="p-2 border-t border-gray-200 space-y-2">
+                            <div class="flex gap-1 text-xs">
+                                <input type="number" placeholder="Ш" class="w-1/2 border border-gray-300 rounded p-1 text-xs">
+                                <span class="self-center text-gray-500">×</span>
+                                <input type="number" placeholder="В" class="w-1/2 border border-gray-300 rounded p-1 text-xs">
+                                <span class="self-center text-gray-500 text-xs">м</span>
+                            </div>
+                            <button class="w-full flex items-center justify-center gap-1 text-orange-500 hover:text-orange-600 text-xs border border-dashed border-orange-300 rounded p-1 transition">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Добавить
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Размеры обоев -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-xs text-gray-700 font-medium">Ширина рулона</label>
+                            <div class="relative mt-1">
+                                <input type="number" value="53" class="w-full border border-gray-300 rounded-lg p-2 pr-8 text-xs focus:border-orange-500 focus:ring-orange-500">
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-xs">см</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-700 font-medium">Длина рулона</label>
+                            <div class="relative mt-1">
+                                <input type="number" value="10" class="w-full border border-gray-300 rounded-lg p-2 pr-6 text-xs focus:border-orange-500 focus:ring-orange-500">
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-xs">м</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-xs text-gray-700 font-medium">Раппорт</label>
+                            <div class="relative mt-1">
+                                <input type="number" value="0" class="w-full border border-gray-300 rounded-lg p-2 pr-8 text-xs focus:border-orange-500 focus:ring-orange-500">
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-xs">см</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-700 font-medium">Смещение</label>
+                            <select class="w-full mt-1 border border-gray-300 rounded-lg p-2 text-xs focus:border-orange-500 focus:ring-orange-500">
+                                <option>Нет</option>
+                                <option>Есть</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            @elseif(str_contains(strtolower($category->name), 'Эмал'))
                 <!-- Калькулятор краски -->
                 <div>
                     <label class="text-sm text-gray-700 font-medium">Площадь поверхности</label>
@@ -157,21 +246,23 @@
                 </div>
             @endif
 
-            <div>
-                <label class="text-sm text-gray-700 font-medium">Расход на ед.</label>
-                <div class="relative mt-1">
-                    <input type="number" class="w-full border border-gray-300 rounded-lg p-2.5 pr-10 text-sm focus:border-orange-500 focus:ring-orange-500">
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-xs">м²</span>
+            @if(!str_contains(strtolower($category->name), 'обои'))
+                <div>
+                    <label class="text-sm text-gray-700 font-medium">Расход на ед.</label>
+                    <div class="relative mt-1">
+                        <input type="number" class="w-full border border-gray-300 rounded-lg p-2.5 pr-10 text-sm focus:border-orange-500 focus:ring-orange-500">
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-xs">м²</span>
+                    </div>
                 </div>
-            </div>
 
-            <div>
-                <label class="text-sm text-gray-700 font-medium">Цена за единицу</label>
-                <div class="relative mt-1">
-                    <input type="number" class="w-full border border-gray-300 rounded-lg p-2.5 pr-8 text-sm focus:border-orange-500 focus:ring-orange-500">
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-sm">₽</span>
+                <div>
+                    <label class="text-sm text-gray-700 font-medium">Цена за единицу</label>
+                    <div class="relative mt-1">
+                        <input type="number" class="w-full border border-gray-300 rounded-lg p-2.5 pr-8 text-sm focus:border-orange-500 focus:ring-orange-500">
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-sm">₽</span>
+                    </div>
                 </div>
-            </div>
+            @endif
 
             <button class="bg-gray-800 hover:bg-orange-500 text-white w-full py-2.5 text-sm font-medium rounded-lg transition">
                 Рассчитать
@@ -179,7 +270,6 @@
         </aside>
     </div>
 </div>
-
 <script>
     // Global variables
     let allMaterials = [];
@@ -304,7 +394,7 @@
 
         card.innerHTML = `
         <!-- Фото -->
-        <div class="h-40 bg-gray-100 flex items-center justify-center p-4">
+        <div class="h-40 bg-white flex items-center justify-center p-4">
             ${imageUrl
             ? `<img src="${imageUrl}"
                        alt="${material.name}"
@@ -320,8 +410,8 @@
         </div>
 
         <!-- Контент -->
-        <div class="p-4 text-sm text-gray-700 flex flex-col gap-1 flex-grow">
-            <h3 class="font-semibold text-lg text-gray-900 h-12 overflow-hidden">
+        <div class=" p-4 text-sm text-gray-700 flex flex-col gap-1 flex-grow">
+            <h3 class="font-semibold text-lg text-gray-900 h-fit overflow-hidden">
                 ${material.name}
             </h3>
             <p class="text-gray-500">${material.article || ''}</p>

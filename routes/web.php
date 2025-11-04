@@ -22,7 +22,7 @@ Route::get('/categories', [MaterialCategoryController::class, 'indexWeb'])->name
 // Материалы конкретной категории (обновленный маршрут без /materials)
 Route::get('/categories/{slug}', [MaterialCategoryController::class, 'showCategoryMaterials'])->name('categories.materials');
 
-// Старые маршруты для обратной совместимости
+// Старые маршруты для обратной совместимостиц
 Route::get('/materials/{id}', fn($id) => view('materials'));
 
 Route::get('/project', function () {
