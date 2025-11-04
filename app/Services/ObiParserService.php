@@ -11,6 +11,7 @@ use App\Models\MaterialConsumptionRate;
 use App\Models\Supplier;
 use DiDom\Document;
 use GuzzleHttp\Client;
+use GuzzleHttp\Promise\Utils;
 use Illuminate\Support\Str;
 
 class ObiParserService
@@ -28,6 +29,9 @@ class ObiParserService
         $this->client = new Client([
             'timeout' => 30,
             'verify' => false,
+            'pool' => [
+                'max_connections' => 10, // Максимум параллельных соединений
+            ],
             'headers' => [
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -37,7 +41,6 @@ class ObiParserService
             ],
         ]);
 
-        // Маппинг категорий OBI на наши категории и виды работ
         $this->categoryMapping = $this->loadCategoryMapping();
     }
 
@@ -164,7 +167,7 @@ class ObiParserService
 
                 if ($allPages) {
                     $page++;
-                    sleep(1);
+                    sleep(1); // Только между страницами
                 } else {
                     break;
                 }
@@ -192,10 +195,14 @@ class ObiParserService
         $productCards = $document->find('._2iXXi');
         Log::info("Found product cards: " . count($productCards));
 
-        foreach ($productCards as $card) {
-            if (count($products) >= $limit) break;
+        $productUrls = [];
+        $basicProducts = [];
 
-            $product = $this->parseProductCard($card);
+        // Сначала собираем базовую информацию и URLs
+        foreach ($productCards as $card) {
+            if (count($basicProducts) >= $limit) break;
+
+            $product = $this->parseProductCardBasic($card);
             if ($product && !empty($product['name']) && !empty($product['price'])) {
 
                 $externalId = $product['external_id'];
@@ -209,14 +216,27 @@ class ObiParserService
                 }
 
                 $uniqueExternalIds[] = $externalId;
-                $products[] = $product;
+                $basicProducts[] = $product;
+
+                // Сохраняем URL для параллельного парсинга
+                if ($product['product_url']) {
+                    $productUrls[] = $product['product_url'];
+                }
             }
         }
 
-        return $products;
+        // Параллельный парсинг деталей товаров
+        if (!empty($productUrls)) {
+            $detailedProducts = $this->parseProductsDetailsParallel($productUrls, $basicProducts);
+            $products = $detailedProducts;
+        } else {
+            $products = $basicProducts;
+        }
+
+        return array_slice($products, 0, $limit);
     }
 
-    private function parseProductCard($card): ?array
+    private function parseProductCardBasic($card): ?array
     {
         try {
             // Название товара
@@ -258,7 +278,201 @@ class ObiParserService
                 'unit' => $unit,
                 'description' => '',
                 'article' => $externalId ?: Str::slug($name),
+                'brand' => null,
+                'color' => null,
+                'length_mm' => null,
+                'width_mm' => null,
+                'height_mm' => null,
+                'weight_kg' => null,
+                'volume_m3' => null,
             ];
+
+        } catch (\Exception $e) {
+            Log::error('Error parsing product card: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function parseProductsDetailsParallel(array $urls, array $basicProducts): array
+    {
+        $products = [];
+        $urlToProductMap = [];
+
+        // Создаем маппинг URL -> продукт
+        foreach ($basicProducts as $product) {
+            if ($product['product_url']) {
+                $urlToProductMap[$product['product_url']] = $product;
+            }
+        }
+
+        // Создаем промисы для параллельных запросов
+        $promises = [];
+        foreach ($urls as $url) {
+            $promises[$url] = $this->client->getAsync($url, [
+                'timeout' => 15,
+                'headers' => [
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                ]
+            ]);
+        }
+
+        // Обрабатываем результаты - ИСПРАВЛЕННАЯ СТРОКА
+        $results = Utils::settle($promises)->wait();
+
+        foreach ($results as $url => $result) {
+            if ($result['state'] === 'fulfilled') {
+                try {
+                    $response = $result['value'];
+                    $html = (string)$response->getBody();
+                    $details = $this->parseProductDetailsFromHtml($html);
+
+                    // Объединяем базовые данные с деталями
+                    if (isset($urlToProductMap[$url])) {
+                        $product = array_merge($urlToProductMap[$url], $details);
+
+                        // Вычисляем объем если есть размеры
+                        if (!$product['volume_m3'] && ($product['length_mm'] || $product['width_mm'] || $product['height_mm'])) {
+                            $product['volume_m3'] = $this->calculateVolume($product);
+                        }
+
+                        $products[] = $product;
+                    }
+
+                } catch (\Exception $e) {
+                    Log::error("Error processing product details for {$url}: " . $e->getMessage());
+                    // Используем базовые данные если детальный парсинг не удался
+                    if (isset($urlToProductMap[$url])) {
+                        $products[] = $urlToProductMap[$url];
+                    }
+                }
+            } else {
+                Log::error("Failed to fetch product details for {$url}: " . $result['reason']);
+                // Используем базовые данные если запрос не удался
+                if (isset($urlToProductMap[$url])) {
+                    $products[] = $urlToProductMap[$url];
+                }
+            }
+        }
+
+        // Добавляем продукты без URL (если такие есть)
+        foreach ($basicProducts as $product) {
+            if (!$product['product_url'] && !in_array($product, $products, true)) {
+                $products[] = $product;
+            }
+        }
+
+        return $products;
+    }
+
+    private function parseProductDetailsFromHtml(string $html): array
+    {
+        $document = new Document($html);
+
+        $details = [
+            'brand' => null,
+            'color' => null,
+            'length_mm' => null,
+            'width_mm' => null,
+            'height_mm' => null,
+            'weight_kg' => null,
+            'volume_m3' => null,
+            'description' => ''
+        ];
+
+        // Парсим характеристики из секции "Характеристики"
+        $characteristics = $document->find('#Characteristics dl');
+
+        foreach ($characteristics as $charSection) {
+            $items = $charSection->find('div._22uJs');
+
+            foreach ($items as $item) {
+                $keyElement = $item->first('dt.ImGAo');
+                $valueElement = $item->first('dd._gJlB span');
+
+                if (!$keyElement || !$valueElement) {
+                    continue;
+                }
+
+                $key = trim($keyElement->text());
+                $value = trim($valueElement->text());
+
+                $this->mapCharacteristic($details, $key, $value);
+            }
+        }
+
+        // Парсим описание
+        $descriptionElement = $document->first('div[data-testid="product-description"]');
+        if ($descriptionElement) {
+            $details['description'] = trim($descriptionElement->text());
+        }
+
+        return $details;
+    }
+
+    private function parseProductCard($card): ?array
+    {
+        try {
+            // Название товара
+            $nameElement = $card->first('._1UlGi a._1FP_W');
+            if (!$nameElement) {
+                return null;
+            }
+            $name = trim($nameElement->text());
+
+            // Цена
+            $priceElement = $card->first('._3IeOW');
+            if (!$priceElement) {
+                return null;
+            }
+            $price = $this->parsePrice($priceElement->text());
+
+            // Ссылка на товар
+            $productUrl = $nameElement->getAttribute('href');
+            if ($productUrl && !Str::startsWith($productUrl, 'http')) {
+                $productUrl = $this->baseUrl . $productUrl;
+            }
+
+            // ID товара из URL
+            $externalId = $this->extractIdFromUrl($productUrl);
+
+            // Изображение
+            $imageUrl = $this->extractImageUrl($card);
+
+            // Единица измерения
+            $unitElement = $card->first('._3SDdj');
+            $unit = $unitElement ? trim($unitElement->text()) : 'шт';
+
+            // Базовые данные
+            $productData = [
+                'name' => $name,
+                'price' => $price,
+                'image_url' => $imageUrl,
+                'product_url' => $productUrl,
+                'external_id' => $externalId,
+                'unit' => $unit,
+                'description' => '',
+                'article' => $externalId ?: Str::slug($name),
+                'brand' => null,
+                'color' => null,
+                'length_mm' => null,
+                'width_mm' => null,
+                'height_mm' => null,
+                'weight_kg' => null,
+                'volume_m3' => null,
+            ];
+
+            // Парсим детальную информацию если есть ссылка
+            if ($productUrl) {
+                $details = $this->parseProductDetails($productUrl);
+                $productData = array_merge($productData, $details);
+
+                // Вычисляем объем если есть размеры
+                if (!$productData['volume_m3'] && ($productData['length_mm'] || $productData['width_mm'] || $productData['height_mm'])) {
+                    $productData['volume_m3'] = $this->calculateVolume($productData);
+                }
+            }
+
+            return $productData;
 
         } catch (\Exception $e) {
             Log::error('Error parsing product card: ' . $e->getMessage());
@@ -376,6 +590,8 @@ class ObiParserService
                 ])->first();
 
                 if ($existingMaterial) {
+                    // Обновляем существующий материал с новыми данными
+                    $this->updateMaterialWithDetails($existingMaterial, $productData);
                     $this->updatePrice($existingMaterial->id, $productData['price']);
                     $results['materials'][] = $existingMaterial;
                     continue;
@@ -390,6 +606,13 @@ class ObiParserService
                     'image_url' => $productData['image_url'],
                     'supplier_id' => $this->supplierId,
                     'external_id' => $externalId,
+                    'length_mm' => $productData['length_mm'],
+                    'width_mm' => $productData['width_mm'],
+                    'height_mm' => $productData['height_mm'],
+                    'weight_kg' => $productData['weight_kg'],
+                    'color' => $productData['color'],
+                    'brand' => $productData['brand'],
+                    'volume_m3' => $productData['volume_m3'],
                 ]);
 
                 $this->updatePrice($material->id, $productData['price']);
@@ -407,6 +630,27 @@ class ObiParserService
         }
 
         return $results;
+    }
+
+    private function updateMaterialWithDetails(Material $material, array $productData): void
+    {
+        $updateData = [];
+
+        $fields = [
+            'description', 'unit', 'article', 'image_url',
+            'length_mm', 'width_mm', 'height_mm', 'weight_kg',
+            'color', 'brand', 'volume_m3'
+        ];
+
+        foreach ($fields as $field) {
+            if (isset($productData[$field]) && $productData[$field] !== null) {
+                $updateData[$field] = $productData[$field];
+            }
+        }
+
+        if (!empty($updateData)) {
+            $material->update($updateData);
+        }
     }
 
     private function findOrCreateCategory(string $categorySlug): ?MaterialCategory
@@ -438,6 +682,61 @@ class ObiParserService
 
         Log::info("Category found/created: {$categoryName}");
         return $category;
+    }
+
+    private function mapCharacteristic(array &$details, string $key, string $value): void
+    {
+        $mapping = [
+            'Бренд' => 'brand',
+            'Основной цвет' => 'color',
+            'Цвет' => 'color',
+            'Длина' => 'length_mm',
+            'Высота' => 'height_mm',
+            'Ширина' => 'width_mm',
+            'Толщина' => 'height_mm',
+            'Вес' => 'weight_kg',
+            'Вес брутто' => 'weight_kg',
+            'Глубина' => 'height_mm',
+        ];
+
+        $field = $mapping[$key] ?? null;
+
+        if (!$field) {
+            return;
+        }
+
+        // Извлекаем числовое значение из строки
+        preg_match('/(\d+[.,]?\d*)/', $value, $matches);
+        $numericValue = $matches[1] ?? null;
+
+        if ($numericValue) {
+            $numericValue = str_replace(',', '.', $numericValue);
+
+            // Для размеров в мм
+            if (in_array($field, ['length_mm', 'width_mm', 'height_mm'])) {
+                $details[$field] = (float) $numericValue;
+            }
+            // Для веса в кг
+            elseif ($field === 'weight_kg') {
+                $details[$field] = (float) $numericValue;
+            }
+        } else {
+            // Для текстовых полей (бренд, цвет)
+            $details[$field] = $value;
+        }
+    }
+
+    private function calculateVolume(array $details): ?float
+    {
+        if ($details['length_mm'] && $details['width_mm'] && $details['height_mm']) {
+            // Переводим мм в метры и вычисляем объем в м³
+            $volume = ($details['length_mm'] / 1000) *
+                ($details['width_mm'] / 1000) *
+                ($details['height_mm'] / 1000);
+            return round($volume, 4);
+        }
+
+        return null;
     }
 
     private function createConsumptionRates(array $materials, string $categorySlug): array

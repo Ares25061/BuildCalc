@@ -95,14 +95,107 @@ class ParseAllObiCategories extends Command
         $this->info("   📏 С нормами расхода: " . ($withRates ? 'Да' : 'Нет'));
         $this->info("   ⏭️ Пропускать существующие: " . ($skipExisting ? 'Да' : 'Нет'));
     }
-
+    private function getManualCategories(): array
+    {
+        return [
+            [
+                'name' => 'Наружная канализация',
+                'slug' => 'naruzhnaja-kanalizacija',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/naruzhnaja-kanalizacija'
+            ],
+            [
+                'name' => 'Теплоизоляция',
+                'slug' => 'teploizoljacija',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/teploizoljacija'
+            ],
+            [
+                'name' => 'Шумоизоляция',
+                'slug' => 'shumoizoljacija',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/shumoizoljacija'
+            ],
+            [
+                'name' => 'Гидроизоляция',
+                'slug' => 'gidroizoljacija',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/gidroizoljacija'
+            ],
+            [
+                'name' => 'Пароизоляция',
+                'slug' => 'paroizoljacija',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/paroizoljacija'
+            ],
+            [
+                'name' => 'Металлопрокат',
+                'slug' => 'metalloprokat',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/metalloprokat'
+            ],
+            [
+                'name' => 'Сухие строительные смеси',
+                'slug' => 'suhie-stroitelnye-smesi',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/suhie-stroitelnye-smesi'
+            ],
+            [
+                'name' => 'Блоки строительные',
+                'slug' => 'bloki-stroitelnye',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/bloki-stroitelnye'
+            ],
+            [
+                'name' => 'Листовые материалы',
+                'slug' => 'listovye-materialy',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/listovye-materialy'
+            ],
+            [
+                'name' => 'Строительное оборудование',
+                'slug' => 'stroitelnoe-oborudovanie',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/stroitelnoe-oborudovanie'
+            ],
+            [
+                'name' => 'Строительные расходные материалы',
+                'slug' => 'stroitelnye-rashodnye-materialy',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/stroitelnye-rashodnye-materialy'
+            ],
+            [
+                'name' => 'Подвесные потолки',
+                'slug' => 'podvesnye-potolki',
+                'image_url' => null,
+                'url' => 'https://obi.ru/strojmaterialy/podvesnye-potolki'
+            ],
+        ];
+    }
     private function getCategoriesToParse(?string $specificCategories, bool $skipExisting, bool $forceScan): array
     {
         if ($specificCategories) {
             return $this->getSpecificCategories($specificCategories);
         }
 
-        return $this->getCategoriesFromObi($skipExisting, $forceScan);
+        // Пробуем сканировать с сайта
+        $scannedCategories = $this->getCategoriesFromObi($skipExisting, $forceScan);
+
+        // Если сканирование не нашло категории, используем ручные
+        if (empty($scannedCategories)) {
+            $this->info("📋 Используем ручной список категорий");
+            $scannedCategories = $this->getManualCategories();
+
+            // Создаем их в БД
+            $this->createCategoriesInDb($scannedCategories);
+
+            // Фильтруем существующие если нужно
+            if ($skipExisting) {
+                $scannedCategories = $this->filterExistingCategories($scannedCategories);
+            }
+        }
+
+        return $scannedCategories;
     }
 
     private function getSpecificCategories(string $categoriesList): array
@@ -131,68 +224,99 @@ class ParseAllObiCategories extends Command
             $html = (string)$response->getBody();
             $document = new Document($html);
 
-            // Ищем категории по структуре из примера
-            $categories = $document->find('a.kn7A0[href*="/strojmaterialy/"]');
+            // Новые селекторы для категорий OBI
+            $categories = $document->find('a[href*="/strojmaterialy/"]');
 
             $categoryData = [];
+            $processedSlugs = [];
+
             foreach ($categories as $category) {
                 $href = $category->getAttribute('href');
-                $nameElement = $category->first('span._17tb-');
 
-                if (!$nameElement) {
+                // Фильтруем только категории стройматериалов
+                if (strpos($href, '/strojmaterialy/') === false ||
+                    strpos($href, '?') !== false ||
+                    in_array($href, ['/strojmaterialy/', '/strojmaterialy'])) {
                     continue;
                 }
 
-                $name = trim($nameElement->text());
+                // Извлекаем slug из URL
+                $slug = str_replace('/strojmaterialy/', '', $href);
+                $slug = rtrim($slug, '/');
 
-                // Фильтруем категории
-                if (strpos($href, '/strojmaterialy/') !== false &&
-                    !strpos($href, '?') &&
-                    strlen($name) > 2 &&
-                    !in_array($name, ['Стройматериалы', 'Все товары', 'Акции', 'Новинки'])) {
-
-                    $slug = str_replace('/strojmaterialy/', '', $href);
-                    $slug = rtrim($slug, '/');
-
-                    // Извлекаем картинку категории
-                    $imageUrl = $this->extractCategoryImage($category);
-
-                    $categoryData[] = [
-                        'name' => $name,
-                        'slug' => $slug,
-                        'image_url' => $imageUrl,
-                        'url' => 'https://obi.ru' . $href
-                    ];
+                // Пропускаем дубликаты
+                if (in_array($slug, $processedSlugs) || empty($slug)) {
+                    continue;
                 }
+
+                // Пробуем разные селекторы для названия
+                $name = $this->extractCategoryName($category);
+
+                if (!$name || strlen($name) < 2) {
+                    continue;
+                }
+
+                // Фильтруем ненужные категории
+                if (in_array($name, ['Стройматериалы', 'Все товары', 'Акции', 'Новинки', 'Распродажа'])) {
+                    continue;
+                }
+
+                // Извлекаем картинку категории
+                $imageUrl = $this->extractCategoryImage($category);
+
+                $categoryData[] = [
+                    'name' => $name,
+                    'slug' => $slug,
+                    'image_url' => $imageUrl,
+                    'url' => 'https://obi.ru' . $href
+                ];
+
+                $processedSlugs[] = $slug;
             }
 
-            // Убираем дубликаты
-            $uniqueCategories = [];
-            foreach ($categoryData as $category) {
-                $uniqueCategories[$category['slug']] = $category;
-            }
-
-            $categories = array_values($uniqueCategories);
-
-            $this->info("✅ Найдено " . count($categories) . " категорий на OBI");
+            $this->info("✅ Найдено " . count($categoryData) . " категорий на OBI");
 
             // Показываем найденные категории
-            $this->showScannedCategories($categories);
+            $this->showScannedCategories($categoryData);
 
             // Создаем категории в БД
-            $this->createCategoriesInDb($categories);
+            $this->createCategoriesInDb($categoryData);
 
             // Фильтруем существующие если нужно
             if ($skipExisting) {
-                $categories = $this->filterExistingCategories($categories);
+                $categoryData = $this->filterExistingCategories($categoryData);
             }
 
-            return $categories;
+            return $categoryData;
 
         } catch (\Exception $e) {
             $this->error("❌ Ошибка сканирования категорий: " . $e->getMessage());
             return [];
         }
+    }
+
+    private function extractCategoryName($categoryElement): ?string
+    {
+        // Пробуем разные селекторы для названия категории
+        $selectors = [
+            'span._17tb-',
+            '.category-name',
+            '.kn7A0 span',
+            'span',
+            'div'
+        ];
+
+        foreach ($selectors as $selector) {
+            $nameElement = $categoryElement->first($selector);
+            if ($nameElement) {
+                $name = trim($nameElement->text());
+                if (!empty($name) && strlen($name) > 1) {
+                    return $name;
+                }
+            }
+        }
+
+        return null;
     }
 
     private function extractCategoryImage($categoryElement): ?string
