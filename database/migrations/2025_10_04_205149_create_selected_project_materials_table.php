@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('material_id');
             $table->decimal('quantity', 10, 3);
             $table->timestampTz('created_at')->nullable()->default(DB::raw("now()"));
+            $table->timestampTz('updated_at')->nullable()->default(DB::raw("now()"));
 
             $table->unique(['project_item_id', 'material_id'], 'selected_project_materials_project_item_id_material_id_key');
         });

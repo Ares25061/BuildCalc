@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SelectedProjectMaterial extends Model
 {
@@ -25,7 +26,7 @@ class SelectedProjectMaterial extends Model
      *
      * @var bool
      */
-    public $timestamps = false;
+    public $timestamps = true;
 
     /**
      * Соединение с БД, которое должна использовать модель.
@@ -43,6 +44,47 @@ class SelectedProjectMaterial extends Model
         'project_item_id',
         'material_id',
         'quantity',
-        'created_at'
     ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'quantity' => 'decimal:3',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    /**
+     * Get the project item that owns the selected project material.
+     */
+    public function projectItem(): BelongsTo
+    {
+        return $this->belongsTo(ProjectItem::class, 'project_item_id');
+    }
+
+    /**
+     * Get the material that owns the selected project material.
+     */
+    public function material(): BelongsTo
+    {
+        return $this->belongsTo(Material::class, 'material_id');
+    }
+
+    /**
+     * Get the project through project item.
+     */
+    public function project()
+    {
+        return $this->hasOneThrough(
+            Project::class,
+            ProjectItem::class,
+            'id', // Foreign key on ProjectItem table
+            'id', // Foreign key on Project table
+            'project_item_id', // Local key on SelectedProjectMaterial table
+            'project_id' // Local key on ProjectItem table
+        );
+    }
 }

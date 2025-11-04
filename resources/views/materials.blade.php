@@ -78,6 +78,34 @@
 
         <!-- ✅ Карточки -->
         <section>
+            <!-- Выбор проекта для добавления материалов -->
+            <div id="project-selector" class="mb-6 bg-white p-4 rounded-2xl border border-gray-200 shadow hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Добавить материал в смету</h3>
+                        <p class="text-sm text-gray-600">Выберите проект для добавления материалов</p>
+                    </div>
+                    <button onclick="hideProjectSelector()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <select id="project-select" class="w-full border border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:ring-orange-500">
+                        <option value="">Выберите проект...</option>
+                    </select>
+                    <div class="mt-3 flex gap-3">
+                        <button onclick="addToSelectedProject()" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex-1">
+                            Добавить в смету
+                        </button>
+                        <a href="/project/create" class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition text-center flex items-center justify-center">
+                            Новый проект
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div id="materials-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 <!-- Loading state -->
                 <div id="loading-state" class="col-span-3 text-center py-12">
@@ -270,11 +298,16 @@
         </aside>
     </div>
 </div>
+
 <script>
     // Global variables
     let allMaterials = [];
     let filteredMaterials = [];
+    let userProjects = [];
+    let selectedMaterial = null;
     const currentCategoryId = {{ $category->id }};
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectIdFromUrl = urlParams.get('project_id');
 
     // Fetch materials from API for current category
     async function loadMaterials() {
@@ -300,11 +333,57 @@
             // Display materials
             displayMaterials();
 
+            // Load user projects
+            await loadUserProjects();
+
+            // If project_id is in URL, preselect it
+            if (projectIdFromUrl) {
+                document.getElementById('project-select').value = projectIdFromUrl;
+            }
+
             hideLoading();
         } catch (error) {
             console.error('Error loading materials:', error);
             showError('Ошибка загрузки материалов: ' + error.message);
         }
+    }
+
+    // Load user projects for selector
+    async function loadUserProjects() {
+        const token = localStorage.getItem('auth_token');
+        if (!token) return;
+
+        try {
+            const response = await fetch('/api/projects', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                userProjects = await response.json();
+                populateProjectSelector();
+            }
+        } catch (error) {
+            console.error('Error loading projects:', error);
+        }
+    }
+
+    function populateProjectSelector() {
+        const projectSelect = document.getElementById('project-select');
+        if (!projectSelect) return;
+
+        // Clear existing options except the first one
+        projectSelect.innerHTML = '<option value="">Выберите проект...</option>';
+
+        userProjects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project.id;
+            option.textContent = project.name;
+            projectSelect.appendChild(option);
+        });
     }
 
     function populateFilters() {
@@ -427,15 +506,15 @@
             </p>
 
             <!-- Количество -->
-            <div x-data="{ qty: 1 }" class="mt-3 mx-auto border border-gray-300 rounded-xl px-4 py-2 w-full flex items-center justify-between gap-3">
-                <button @click="qty = Math.max(1, qty - 1)" class="text-2xl leading-none text-gray-600 hover:text-black">–</button>
-                <input type="number" min="1" x-model="qty" class="w-12 text-center outline-none bg-transparent text-lg font-medium border-0 focus:ring-0">
+            <div class="mt-3 mx-auto border border-gray-300 rounded-xl px-4 py-2 w-full flex items-center justify-between gap-3">
+                <button onclick="changeQuantity(this, -1)" class="text-2xl leading-none text-gray-600 hover:text-black">–</button>
+                <input type="number" min="1" value="1" class="quantity-input w-12 text-center outline-none bg-transparent text-lg font-medium border-0 focus:ring-0">
                 <span class="text-sm text-gray-700">${material.unit}</span>
-                <button @click="qty++" class="text-2xl leading-none text-gray-600 hover:text-black">+</button>
+                <button onclick="changeQuantity(this, 1)" class="text-2xl leading-none text-gray-600 hover:text-black">+</button>
             </div>
 
             <div class="flex gap-2 mt-3">
-                <button class="bg-orange-500 text-white py-2 px-3 rounded-lg hover:bg-orange-600 transition flex-1 text-sm">
+                <button onclick="addToEstimate(${material.id})" class="bg-orange-500 text-white py-2 px-3 rounded-lg hover:bg-orange-600 transition flex-1 text-sm">
                     В смету
                 </button>
                 <button class="bg-gray-800 text-white py-2 px-3 rounded-lg hover:bg-gray-600 transition flex-1 text-sm border border-gray-300">
@@ -446,6 +525,148 @@
     `;
 
         return card;
+    }
+
+    // Функция изменения количества
+    function changeQuantity(button, change) {
+        const container = button.closest('div');
+        const input = container.querySelector('.quantity-input');
+        let currentValue = parseInt(input.value) || 1;
+        let newValue = currentValue + change;
+
+        if (newValue < 1) newValue = 1;
+        input.value = newValue;
+    }
+
+    // Функция добавления в смету
+    function addToEstimate(materialId) {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            alert('Для добавления материалов в смету необходимо авторизоваться');
+            window.location.href = '/login';
+            return;
+        }
+
+        // Find the material card and get quantity
+        const materialCard = document.querySelector(`[onclick="addToEstimate(${materialId})"]`).closest('.bg-white');
+        const quantityInput = materialCard.querySelector('.quantity-input');
+        const quantity = parseInt(quantityInput.value) || 1;
+
+        // Find material data
+        const material = allMaterials.find(m => m.id === materialId);
+        if (!material) return;
+
+        selectedMaterial = {
+            id: material.id,
+            name: material.name,
+            quantity: quantity,
+            unit: material.unit,
+            price: material.prices && material.prices.length > 0 ? material.prices[material.prices.length - 1].price : 0
+        };
+
+        // Show project selector
+        showProjectSelector();
+    }
+
+    // Показать выбор проекта
+    function showProjectSelector() {
+        const selector = document.getElementById('project-selector');
+        if (selector) {
+            selector.classList.remove('hidden');
+            selector.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    // Скрыть выбор проекта
+    function hideProjectSelector() {
+        const selector = document.getElementById('project-selector');
+        if (selector) {
+            selector.classList.add('hidden');
+        }
+        selectedMaterial = null;
+    }
+
+    // Добавить материал в выбранный проект
+    // Добавить материал в выбранный проект
+    async function addToSelectedProject() {
+        const projectSelect = document.getElementById('project-select');
+        const selectedProjectId = projectSelect.value;
+
+        if (!selectedProjectId) {
+            alert('Пожалуйста, выберите проект');
+            return;
+        }
+
+        if (!selectedMaterial) {
+            alert('Ошибка: материал не выбран');
+            return;
+        }
+
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            alert('Ошибка авторизации');
+            window.location.href = '/login';
+            return;
+        }
+
+        try {
+            console.log('Sending request to add material:', {
+                projectId: selectedProjectId,
+                materialId: selectedMaterial.id,
+                quantity: selectedMaterial.quantity
+            });
+
+            const response = await fetch(`/api/projects/${selectedProjectId}/materials`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    material_id: selectedMaterial.id,
+                    quantity: selectedMaterial.quantity
+                })
+            });
+
+            console.log('Response status:', response.status);
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Success response:', result);
+                showSuccess('Материал добавлен в смету!');
+                hideProjectSelector();
+
+                // Redirect to project page if project_id was in URL
+                if (projectIdFromUrl) {
+                    setTimeout(() => {
+                        window.location.href = `/project/${selectedProjectId}`;
+                    }, 1500);
+                }
+            } else {
+                let errorMessage = 'Ошибка при добавлении материала';
+
+                try {
+                    const errorData = await response.json();
+                    console.error('Error response data:', errorData);
+                    errorMessage = errorData.message || errorMessage;
+
+                    if (errorData.error) {
+                        errorMessage += ': ' + errorData.error;
+                    }
+                } catch (parseError) {
+                    // Если не удалось распарсить JSON
+                    const textError = await response.text();
+                    console.error('Error response text:', textError);
+                    errorMessage = textError || errorMessage;
+                }
+
+                throw new Error(errorMessage);
+            }
+        } catch (error) {
+            console.error('Network error adding material:', error);
+            showError('Ошибка при добавлении материала: ' + error.message);
+        }
     }
 
     // Добавьте эту функцию для обработки ошибок загрузки изображений
@@ -540,6 +761,18 @@
                 </button>
             </div>
         `;
+    }
+
+    function showSuccess(message) {
+        // Создаем уведомление об успехе
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
     }
 
     // Event listeners

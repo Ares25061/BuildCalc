@@ -38,3 +38,15 @@ Route::get('/project/{id}', function ($id) {
 })->name('project.show');
 
 Route::get('/test', fn() => view('test'));
+Route::get('/project', function () {
+    return view('project');
+})->name('project.index');
+
+Route::get('/project/create', function () {
+    return view('create_project'); // без .blade.php
+})->name('project.create');
+
+// Замените существующий маршрут просмотра сметы
+Route::get('/project/{id}', function ($id) {
+    return view('show_projects', ['projectId' => $id]);
+})->name('project.show');

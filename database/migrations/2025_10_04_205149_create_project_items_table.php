@@ -20,6 +20,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->integer('sort_order')->nullable()->default(0);
             $table->timestampTz('created_at')->nullable()->default(DB::raw("now()"));
+            $table->timestampTz('updated_at')->nullable()->default(DB::raw("now()"));
         });
     }
 

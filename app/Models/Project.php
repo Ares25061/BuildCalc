@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
@@ -25,7 +26,7 @@ class Project extends Model
      *
      * @var bool
      */
-    public $timestamps = false;
+    public $timestamps = true;
 
     /**
      * Соединение с БД, которое должна использовать модель.
@@ -40,14 +41,11 @@ class Project extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'id',
         'user_id',
         'name',
         'description',
         'status',
         'total_estimated_cost',
-        'created_at',
-        'updated_at'
     ];
 
     /**
@@ -60,4 +58,27 @@ class Project extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the project items for the project.
+     */
+    public function projectItems(): HasMany
+    {
+        return $this->hasMany(ProjectItem::class, 'project_id');
+    }
+
+    /**
+     * Get the selected materials for the project through project items.
+     */
+    public function selectedMaterials()
+    {
+        return $this->hasManyThrough(
+            SelectedProjectMaterial::class,
+            ProjectItem::class,
+            'project_id', // Foreign key on ProjectItem table
+            'project_item_id', // Foreign key on SelectedProjectMaterial table
+            'id', // Local key on Project table
+            'id' // Local key on ProjectItem table
+        );
+    }
 }

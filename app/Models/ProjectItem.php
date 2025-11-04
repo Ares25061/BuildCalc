@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProjectItem extends Model
 {
@@ -25,7 +27,7 @@ class ProjectItem extends Model
      *
      * @var bool
      */
-    public $timestamps = false;
+    public $timestamps = false; // Измените на false
 
     /**
      * Соединение с БД, которое должна использовать модель.
@@ -40,13 +42,12 @@ class ProjectItem extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'id',
         'project_id',
         'work_type_id',
         'quantity',
         'notes',
         'sort_order',
-        'created_at'
+        'created_at' // Только created_at, без updated_at
     ];
 
     /**
@@ -58,4 +59,28 @@ class ProjectItem extends Model
         'quantity' => 'decimal:3',
         'created_at' => 'datetime',
     ];
+
+    /**
+     * Get the project that owns the project item.
+     */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    /**
+     * Get the work type that owns the project item.
+     */
+    public function workType(): BelongsTo
+    {
+        return $this->belongsTo(WorkType::class, 'work_type_id');
+    }
+
+    /**
+     * Get the selected materials for the project item.
+     */
+    public function selectedMaterials(): HasMany
+    {
+        return $this->hasMany(SelectedProjectMaterial::class, 'project_item_id');
+    }
 }

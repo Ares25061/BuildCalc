@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkType extends Model
 {
@@ -25,7 +26,7 @@ class WorkType extends Model
      *
      * @var bool
      */
-    public $timestamps = false;
+    public $timestamps = true;
 
     /**
      * Соединение с БД, которое должна использовать модель.
@@ -40,11 +41,9 @@ class WorkType extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'id',
         'name',
         'description',
         'unit',
-        'created_at'
     ];
 
     /**
@@ -54,5 +53,14 @@ class WorkType extends Model
      */
     protected $casts = [
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the project items for the work type.
+     */
+    public function projectItems(): HasMany
+    {
+        return $this->hasMany(ProjectItem::class, 'work_type_id');
+    }
 }
