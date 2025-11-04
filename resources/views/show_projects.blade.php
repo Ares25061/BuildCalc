@@ -24,16 +24,26 @@
                     <span id="projectStatusBadge" class="px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap">
                         Загрузка...
                     </span>
-                    <button onclick="editProject()" class="flex items-center justify-center gap-2 bg-gray-50 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200 font-medium text-sm whitespace-nowrap">
+                    <button onclick="printEstimate()" class="flex items-center gap-2 px-4 py-2 font-medium text-gray-700 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-300 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Печать
+                    </button>
+
+
+                    <button onclick="editProject()" class="flex items-center justify-center gap-2 bg-gray-200 text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors border border-gray-300 font-medium text-sm whitespace-nowrap">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
+                        Редактировать
                     </button>
 
                     <button onclick="deleteProject()" class="flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-200 font-medium text-sm whitespace-nowrap">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
+                        Удалить
                     </button>
                 </div>
 
@@ -89,27 +99,7 @@
 
             </div>
 
-            <!-- Правая часть: кнопки действий -->
-            <div class="flex flex-col sm:flex-row gap-3 lg:justify-end">
-                <button onclick="addWorkPosition()" class="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Добавить позицию
-                </button>
-                <button onclick="printEstimate()" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                    </svg>
-                    Печать
-                </button>
-                <button onclick="exportToExcel()" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Экспорт
-                </button>
-            </div>
+
         </div>
     </div>
 
@@ -136,40 +126,43 @@
         </div>
     </div>
 
-    <!-- ✅ Контейнер для позиций работ -->
-    <div id="workPositionsContainer">
-        <!-- Позиции работ будут загружаться здесь -->
-        <div class="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
-            <div class="px-6 py-8 text-center text-gray-500">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
-                <p>Загрузка позиций работ...</p>
+    <div class="bg-gray-100">
+        <!-- ✅ Контейнер для позиций работ -->
+        <div id="workPositionsContainer">
+            <!-- Позиции работ будут загружаться здесь -->
+            <div class="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
+                <div class="px-6 py-8 text-center text-gray-500">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
+                    <p>Загрузка позиций работ...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ Улучшенная панель добавления материалов -->
+        <div class="flex flex-col sm:flex-row justify-between items-center p-4 border-t bg-white rounded-2xl shadow border border-gray-200 gap-4">
+            <div class="text-sm text-gray-600">
+                Всего позиций: <span id="totalWorkPositionsCount" class="font-medium">0</span> •
+                Материалов: <span id="totalMaterialsCount" class="font-medium">0</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="/categories?project_id={{ $projectId }}"
+                   class="flex items-center justify-center gap-2 bg-orange-50 text-orange-600 px-5 py-2 rounded-xl hover:bg-orange-100 transition-colors border border-orange-200 font-medium text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Добавить материал
+                </a>
+                <button onclick="addWorkPosition()"
+                        class="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 px-5 py-2 rounded-xl hover:bg-blue-100 transition-colors border border-blue-200 font-medium text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Новая позиция работ
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ✅ Улучшенная панель добавления материалов -->
-    <div class="flex flex-col sm:flex-row justify-between items-center p-4 border-t bg-white rounded-b-2xl shadow border border-gray-200 gap-4">
-        <div class="text-sm text-gray-600">
-            Всего позиций: <span id="totalWorkPositionsCount" class="font-medium">0</span> •
-            Материалов: <span id="totalMaterialsCount" class="font-medium">0</span>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-3">
-            <a href="/categories?project_id={{ $projectId }}"
-               class="flex items-center justify-center gap-2 bg-orange-50 text-orange-600 px-5 py-2 rounded-xl hover:bg-orange-100 transition-colors border border-orange-200 font-medium text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                Добавить материал
-            </a>
-            <button onclick="addWorkPosition()"
-                    class="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 px-5 py-2 rounded-xl hover:bg-blue-100 transition-colors border border-blue-200 font-medium text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                Новая позиция работ
-            </button>
-        </div>
-    </div>
 
     <!-- ✅ Панель итогов -->
     <div class="flex justify-end">

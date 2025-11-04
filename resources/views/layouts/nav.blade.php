@@ -9,7 +9,6 @@
             <div class="hidden md:flex space-x-8">
                 <a href="/categories" class="text-gray-300 hover:text-white font-medium transition duration-200">Каталог материалов</a>
                 <a href="/project" class="text-gray-300 hover:text-white font-medium transition duration-200">Сметы</a>
-                <a href="#" class="text-gray-300 hover:text-white font-medium transition duration-200">Калькулятор</a>
             </div>
 
             <div class="flex items-center">
