@@ -47,6 +47,7 @@ class ObiParserService
     private function loadCategoryMapping(): array
     {
         return [
+            // Существующие категории
             'fasadnye-materialy' => [
                 'category_name' => 'Фасадные материалы',
                 'work_type' => 'Монтаж сайдинга',
@@ -122,12 +123,51 @@ class ObiParserService
                 'work_type' => 'Монтаж потолков',
                 'consumption_rate' => 1.03
             ],
-            // Резервные маппинги
-            'kraski' => [
-                'category_name' => 'Краски',
-                'work_type' => 'Покраска',
+
+            // НОВЫЕ КАТЕГОРИИ - КРАСКИ
+            'kraski-dlja-vnutrennih-rabot' => [
+                'category_name' => 'Краски для внутренних работ',
+                'work_type' => 'Покраска', // Используем существующий вид работ
                 'consumption_rate' => 0.15
             ],
+            'kraski-dlja-naruzhnyh-rabot' => [
+                'category_name' => 'Краски для наружных работ',
+                'work_type' => 'Покраска', // Используем существующий вид работ
+                'consumption_rate' => 0.18
+            ],
+
+            // НОВЫЕ КАТЕГОРИИ - ЭМАЛИ
+            'jemali' => [
+                'category_name' => 'Эмали',
+                'work_type' => 'Покраска', // Используем существующий вид работ
+                'consumption_rate' => 0.12
+            ],
+
+            // НОВЫЕ КАТЕГОРИИ - ПОКРЫТИЯ ДЛЯ ДЕРЕВА
+            'pokrytija-dlja-dereva' => [
+                'category_name' => 'Покрытия для дерева',
+                'work_type' => 'Покраска', // Используем существующий вид работ
+                'consumption_rate' => 0.15
+            ],
+
+            // НОВЫЕ КАТЕГОРИИ - ОБОИ
+            'dekorativnye-oboi' => [
+                'category_name' => 'Декоративные обои',
+                'work_type' => 'Оклейка обоями',
+                'consumption_rate' => 1.1
+            ],
+            'oboi-pod-pokrasku' => [
+                'category_name' => 'Обои под покраску',
+                'work_type' => 'Оклейка обоями',
+                'consumption_rate' => 1.1
+            ],
+            'fotooboi' => [
+                'category_name' => 'Фотообои',
+                'work_type' => 'Оклейка обоями',
+                'consumption_rate' => 1.05
+            ],
+
+            // НОВЫЕ КАТЕГОРИИ - ПЛИТКА
             'plitka' => [
                 'category_name' => 'Плитка',
                 'work_type' => 'Укладка плитки',
@@ -138,7 +178,9 @@ class ObiParserService
 
     public function parseCategory(string $categorySlug, int $limit = 100, bool $allPages = false): array
     {
-        $baseUrl = $this->baseUrl . '/strojmaterialy/' . $categorySlug;
+        // Определяем базовый URL в зависимости от категории
+        $baseUrl = $this->getCategoryBaseUrl($categorySlug);
+
         $allProducts = [];
         $page = 1;
         $maxPages = $allPages ? 10 : 1;
@@ -167,7 +209,7 @@ class ObiParserService
 
                 if ($allPages) {
                     $page++;
-                    sleep(1); // Только между страницами
+                    sleep(1);
                 } else {
                     break;
                 }
@@ -179,6 +221,44 @@ class ObiParserService
         }
 
         return $allProducts;
+    }
+
+    private function getCategoryBaseUrl(string $categorySlug): string
+    {
+        $baseUrls = [
+            // Стройматериалы
+            'fasadnye-materialy' => $this->baseUrl . '/strojmaterialy/fasadnye-materialy',
+            'krovlja' => $this->baseUrl . '/strojmaterialy/krovlja',
+            'vodostok' => $this->baseUrl . '/strojmaterialy/vodostok',
+            'naruzhnaja-kanalizacija' => $this->baseUrl . '/strojmaterialy/naruzhnaja-kanalizacija',
+            'teploizoljacija' => $this->baseUrl . '/strojmaterialy/teploizoljacija',
+            'shumoizoljacija' => $this->baseUrl . '/strojmaterialy/shumoizoljacija',
+            'gidroizoljacija' => $this->baseUrl . '/strojmaterialy/gidroizoljacija',
+            'paroizoljacija' => $this->baseUrl . '/strojmaterialy/paroizoljacija',
+            'metalloprokat' => $this->baseUrl . '/strojmaterialy/metalloprokat',
+            'suhie-stroitelnye-smesi' => $this->baseUrl . '/strojmaterialy/suhie-stroitelnye-smesi',
+            'bloki-stroitelnye' => $this->baseUrl . '/strojmaterialy/bloki-stroitelnye',
+            'listovye-materialy' => $this->baseUrl . '/strojmaterialy/listovye-materialy',
+            'stroitelnoe-oborudovanie' => $this->baseUrl . '/strojmaterialy/stroitelnoe-oborudovanie',
+            'stroitelnye-rashodnye-materialy' => $this->baseUrl . '/strojmaterialy/stroitelnye-rashodnye-materialy',
+            'podvesnye-potolki' => $this->baseUrl . '/strojmaterialy/podvesnye-potolki',
+
+            // НОВЫЕ КАТЕГОРИИ - КРАСКИ
+            'kraski-dlja-vnutrennih-rabot' => $this->baseUrl . '/lakokrasochnye-materialy/kraski-dlja-vnutrennih-rabot',
+            'kraski-dlja-naruzhnyh-rabot' => $this->baseUrl . '/lakokrasochnye-materialy/kraski-dlja-naruzhnyh-rabot',
+            'jemali' => $this->baseUrl . '/lakokrasochnye-materialy/jemali', // исправлен URL
+            'pokrytija-dlja-dereva' => $this->baseUrl . '/lakokrasochnye-materialy/pokrytija-dlja-dereva', // исправлен URL
+
+            // НОВЫЕ КАТЕГОРИИ - ОБОИ
+            'dekorativnye-oboi' => $this->baseUrl . '/dekor/oboi/dekorativnye-oboi',
+            'oboi-pod-pokrasku' => $this->baseUrl . '/dekor/oboi/oboi-pod-pokrasku',
+            'fotooboi' => $this->baseUrl . '/dekor/oboi/fotooboi',
+
+            // НОВЫЕ КАТЕГОРИИ - ПЛИТКА
+            'plitka' => $this->baseUrl . '/plitka',
+        ];
+
+        return $baseUrls[$categorySlug] ?? $this->baseUrl . '/strojmaterialy/' . $categorySlug;
     }
 
     private function fetchPage(string $url): string
