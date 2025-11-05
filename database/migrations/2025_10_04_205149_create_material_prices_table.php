@@ -17,7 +17,6 @@ return new class extends Migration
             $table->integer('material_id');
             $table->decimal('price', 10);
             $table->date('price_date');
-            $table->string('url', 500)->nullable();
             $table->timestampTz('created_at')->nullable()->default(DB::raw("now()"));
         });
     }

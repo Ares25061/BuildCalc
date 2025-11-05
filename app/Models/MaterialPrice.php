@@ -44,7 +44,6 @@ class MaterialPrice extends Model
         'material_id',
         'price',
         'price_date',
-        'url',
         'created_at'
     ];
 
