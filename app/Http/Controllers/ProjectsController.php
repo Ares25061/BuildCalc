@@ -16,12 +16,73 @@ class ProjectsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Получаем проекты только для текущего пользователя
-        $projects = Project::where('user_id', Auth::id())->get();
-        return response()->json($projects);
+        try {
+            $query = Project::where('user_id', Auth::id());
+
+            // Фильтрация по статусу
+            if ($request->has('status') && $request->status !== 'all') {
+                $query->where('status', $request->status);
+            }
+
+            // Поиск по названию
+            if ($request->has('search') && !empty($request->search)) {
+                $searchTerm = '%' . $request->search . '%';
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('name', 'ILIKE', $searchTerm)
+                        ->orWhere('description', 'ILIKE', $searchTerm);
+                });
+            }
+
+            // Сортировка
+            $sortField = 'updated_at';
+            $sortDirection = 'DESC';
+
+            if ($request->has('sort')) {
+                switch ($request->sort) {
+                    case 'date_asc':
+                        $sortField = 'updated_at';
+                        $sortDirection = 'ASC';
+                        break;
+                    case 'date_desc':
+                        $sortField = 'updated_at';
+                        $sortDirection = 'DESC';
+                        break;
+                    case 'cost_asc':
+                        $sortField = 'total_estimated_cost';
+                        $sortDirection = 'ASC';
+                        break;
+                    case 'cost_desc':
+                        $sortField = 'total_estimated_cost';
+                        $sortDirection = 'DESC';
+                        break;
+                    case 'name_asc':
+                        $sortField = 'name';
+                        $sortDirection = 'ASC';
+                        break;
+                    case 'name_desc':
+                        $sortField = 'name';
+                        $sortDirection = 'DESC';
+                        break;
+                }
+            }
+
+            $query->orderBy($sortField, $sortDirection);
+
+            $projects = $query->get();
+
+            return response()->json($projects);
+
+        } catch (\Exception $e) {
+            Log::error('Error loading projects: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Ошибка при загрузке смет',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+
 
     /**
      * Store a newly created resource in storage.

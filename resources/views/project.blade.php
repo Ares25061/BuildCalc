@@ -32,7 +32,7 @@
         <input type="text" id="searchInput"
                placeholder="Поиск по названию..."
                class="w-full md:w-1/3 px-4 py-2 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none"
-               oninput="filterProjects()">
+               oninput="debounce(filterProjects, 500)">
 
         <div class="flex gap-2">
             <button class="filter-btn active bg-orange-50 text-orange-600 px-4 py-2 rounded-lg text-sm shadow-sm"
@@ -94,6 +94,13 @@
     let currentFilter = 'all';
     let currentSearch = '';
     let currentSort = 'date_desc';
+    let debounceTimer;
+
+    // Дебаунс для поиска
+    function debounce(func, wait) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(func, wait);
+    }
 
     // Загрузка проектов при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
@@ -109,7 +116,27 @@
         }
 
         try {
-            const response = await fetch('/api/projects', {
+            // Показываем сообщение о загрузке
+            showLoading();
+
+            // Строим URL с параметрами фильтрации
+            const params = new URLSearchParams();
+
+            if (currentFilter !== 'all') {
+                params.append('status', currentFilter);
+            }
+
+            if (currentSearch) {
+                params.append('search', currentSearch);
+            }
+
+            if (currentSort) {
+                params.append('sort', currentSort);
+            }
+
+            const url = `/api/projects?${params.toString()}`;
+
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'Authorization': 'Bearer ' + token,
@@ -137,27 +164,51 @@
         }
     }
 
+    function showLoading() {
+        const container = document.getElementById('projectsContainer');
+        const noProjectsMessage = document.getElementById('noProjectsMessage');
+
+        // Скрываем сообщение "нет проектов"
+        if (noProjectsMessage) {
+            noProjectsMessage.classList.add('hidden');
+        }
+
+        // Показываем индикатор загрузки
+        container.innerHTML = `
+            <div id="loadingMessage" class="col-span-full text-center py-10">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+                <p class="text-gray-600 mt-4">Загрузка смет...</p>
+            </div>
+        `;
+    }
+
     function renderProjects() {
         const container = document.getElementById('projectsContainer');
         const noProjectsMessage = document.getElementById('noProjectsMessage');
-        const loadingMessage = document.getElementById('loadingMessage');
 
-        // Скрываем сообщение о загрузке
-        loadingMessage.style.display = 'none';
-
-        // Фильтрация и сортировка проектов
-        let filteredProjects = filterAndSortProjects();
-
-        if (filteredProjects.length === 0) {
-            container.innerHTML = '';
-            noProjectsMessage.classList.remove('hidden');
+        if (!container) {
+            console.error('Projects container not found');
             return;
         }
 
-        noProjectsMessage.classList.add('hidden');
+        // Очищаем контейнер
+        container.innerHTML = '';
+
+        if (allProjects.length === 0) {
+            // Показываем сообщение "нет проектов"
+            if (noProjectsMessage) {
+                noProjectsMessage.classList.remove('hidden');
+            }
+            return;
+        }
+
+        // Скрываем сообщение "нет проектов"
+        if (noProjectsMessage) {
+            noProjectsMessage.classList.add('hidden');
+        }
 
         // Генерируем HTML для проектов
-        const projectsHTML = filteredProjects.map(project => `
+        const projectsHTML = allProjects.map(project => `
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow hover:shadow-lg transition flex flex-col">
                 <h3 class="text-lg font-semibold text-gray-900">${escapeHtml(project.name)}</h3>
                 <p class="text-gray-500 text-sm mt-1">${escapeHtml(project.description || 'Без описания')}</p>
@@ -185,44 +236,6 @@
         container.innerHTML = projectsHTML;
     }
 
-    function filterAndSortProjects() {
-        let filtered = allProjects.filter(project => {
-            // Фильтр по статусу
-            if (currentFilter !== 'all' && project.status !== currentFilter) {
-                return false;
-            }
-
-            // Фильтр по поиску
-            if (currentSearch && !project.name.toLowerCase().includes(currentSearch.toLowerCase())) {
-                return false;
-            }
-
-            return true;
-        });
-
-        // Сортировка
-        filtered.sort((a, b) => {
-            switch (currentSort) {
-                case 'date_desc':
-                    return new Date(b.updated_at) - new Date(a.updated_at);
-                case 'date_asc':
-                    return new Date(a.updated_at) - new Date(b.updated_at);
-                case 'cost_desc':
-                    return (b.total_estimated_cost || 0) - (a.total_estimated_cost || 0);
-                case 'cost_asc':
-                    return (a.total_estimated_cost || 0) - (b.total_estimated_cost || 0);
-                case 'name_asc':
-                    return a.name.localeCompare(b.name);
-                case 'name_desc':
-                    return b.name.localeCompare(a.name);
-                default:
-                    return 0;
-            }
-        });
-
-        return filtered;
-    }
-
     function setFilter(status) {
         currentFilter = status;
 
@@ -238,17 +251,17 @@
             activeBtn.classList.add('bg-orange-50', 'text-orange-600', 'shadow-sm');
         }
 
-        renderProjects();
+        loadProjects(); // Перезагружаем проекты с новым фильтром
     }
 
     function filterProjects() {
         currentSearch = document.getElementById('searchInput').value;
-        renderProjects();
+        loadProjects(); // Перезагружаем проекты с новым поисковым запросом
     }
 
     function sortProjects() {
         currentSort = document.getElementById('sortSelect').value;
-        renderProjects();
+        loadProjects(); // Перезагружаем проекты с новой сортировкой
     }
 
     function createNewProject() {
@@ -300,22 +313,32 @@
 
     function showError(message) {
         const container = document.getElementById('projectsContainer');
-        container.innerHTML = `
-            <div class="col-span-full text-center py-10">
-                <div class="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md mx-auto">
-                    <svg class="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <h3 class="text-lg font-semibold text-red-800 mb-2">Ошибка</h3>
-                    <p class="text-red-600">${message}</p>
-                    <button onclick="loadProjects()" class="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
-                        Попробовать снова
-                    </button>
+        const noProjectsMessage = document.getElementById('noProjectsMessage');
+
+        // Скрываем сообщение "нет проектов"
+        if (noProjectsMessage) {
+            noProjectsMessage.classList.add('hidden');
+        }
+
+        if (container) {
+            container.innerHTML = `
+                <div class="col-span-full text-center py-10">
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md mx-auto">
+                        <svg class="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-red-800 mb-2">Ошибка</h3>
+                        <p class="text-red-600">${message}</p>
+                        <button onclick="loadProjects()" class="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+                            Попробовать снова
+                        </button>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
-    // Добавьте эту функцию в существующий скрипт
+
+    // Функция для быстрого создания проекта
     async function createQuickProject() {
         const projectName = prompt('Введите название сметы:');
 
@@ -360,12 +383,15 @@
     }
 
     function showSuccess(message) {
-        // Простая реализация уведомления
-        alert(message);
-    }
+        // Создаем временное уведомление
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        notification.textContent = message;
+        document.body.appendChild(notification);
 
-    function showError(message) {
-        alert('Ошибка: ' + message);
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
     }
 </script>
 
