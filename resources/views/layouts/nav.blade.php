@@ -32,18 +32,15 @@
 
 
 <script>
-    // check auth status
     window.addEventListener('load', function() {
         const token = localStorage.getItem('auth_token');
         const guestButtons = document.getElementById('guestButtons');
         const userButtons = document.getElementById('userButtons');
 
         if (token) {
-            // logged in  - show logout button
             guestButtons.classList.add('hidden');
             userButtons.classList.remove('hidden');
         } else {
-            // not logged in - show login/register buttons
             guestButtons.classList.remove('hidden');
             userButtons.classList.add('hidden');
         }
@@ -63,7 +60,6 @@
             });
 
             if (response.ok) {
-                // clear storage
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('user');
                 window.location.href = '/';

@@ -30,7 +30,7 @@ class ObiParserService
             'timeout' => 30,
             'verify' => false,
             'pool' => [
-                'max_connections' => 10, // Максимум параллельных соединений
+                'max_connections' => 40,
             ],
             'headers' => [
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -47,7 +47,6 @@ class ObiParserService
     private function loadCategoryMapping(): array
     {
         return [
-            // Существующие категории
             'fasadnye-materialy' => [
                 'category_name' => 'Фасадные материалы',
                 'work_type' => 'Монтаж сайдинга',
@@ -123,34 +122,26 @@ class ObiParserService
                 'work_type' => 'Монтаж потолков',
                 'consumption_rate' => 1.03
             ],
-
-            // НОВЫЕ КАТЕГОРИИ - КРАСКИ
             'kraski-dlja-vnutrennih-rabot' => [
                 'category_name' => 'Краски для внутренних работ',
-                'work_type' => 'Покраска', // Используем существующий вид работ
+                'work_type' => 'Покраска',
                 'consumption_rate' => 0.15
             ],
             'kraski-dlja-naruzhnyh-rabot' => [
                 'category_name' => 'Краски для наружных работ',
-                'work_type' => 'Покраска', // Используем существующий вид работ
+                'work_type' => 'Покраска',
                 'consumption_rate' => 0.18
             ],
-
-            // НОВЫЕ КАТЕГОРИИ - ЭМАЛИ
             'jemali' => [
                 'category_name' => 'Эмали',
-                'work_type' => 'Покраска', // Используем существующий вид работ
+                'work_type' => 'Покраска',
                 'consumption_rate' => 0.12
             ],
-
-            // НОВЫЕ КАТЕГОРИИ - ПОКРЫТИЯ ДЛЯ ДЕРЕВА
             'pokrytija-dlja-dereva' => [
                 'category_name' => 'Покрытия для дерева',
-                'work_type' => 'Покраска', // Используем существующий вид работ
+                'work_type' => 'Покраска',
                 'consumption_rate' => 0.15
             ],
-
-            // НОВЫЕ КАТЕГОРИИ - ОБОИ
             'dekorativnye-oboi' => [
                 'category_name' => 'Декоративные обои',
                 'work_type' => 'Оклейка обоями',
@@ -166,8 +157,6 @@ class ObiParserService
                 'work_type' => 'Оклейка обоями',
                 'consumption_rate' => 1.05
             ],
-
-            // НОВЫЕ КАТЕГОРИИ - ПЛИТКА
             'plitka' => [
                 'category_name' => 'Плитка',
                 'work_type' => 'Укладка плитки',
@@ -178,9 +167,7 @@ class ObiParserService
 
     public function parseCategory(string $categorySlug, int $limit = 100, bool $allPages = false): array
     {
-        // Определяем базовый URL в зависимости от категории
         $baseUrl = $this->getCategoryBaseUrl($categorySlug);
-
         $allProducts = [];
         $page = 1;
         $maxPages = $allPages ? 10 : 1;
@@ -226,7 +213,6 @@ class ObiParserService
     private function getCategoryBaseUrl(string $categorySlug): string
     {
         $baseUrls = [
-            // Стройматериалы
             'fasadnye-materialy' => $this->baseUrl . '/strojmaterialy/fasadnye-materialy',
             'krovlja' => $this->baseUrl . '/strojmaterialy/krovlja',
             'vodostok' => $this->baseUrl . '/strojmaterialy/vodostok',
@@ -242,19 +228,13 @@ class ObiParserService
             'stroitelnoe-oborudovanie' => $this->baseUrl . '/strojmaterialy/stroitelnoe-oborudovanie',
             'stroitelnye-rashodnye-materialy' => $this->baseUrl . '/strojmaterialy/stroitelnye-rashodnye-materialy',
             'podvesnye-potolki' => $this->baseUrl . '/strojmaterialy/podvesnye-potolki',
-
-            // НОВЫЕ КАТЕГОРИИ - КРАСКИ
             'kraski-dlja-vnutrennih-rabot' => $this->baseUrl . '/lakokrasochnye-materialy/kraski-dlja-vnutrennih-rabot',
             'kraski-dlja-naruzhnyh-rabot' => $this->baseUrl . '/lakokrasochnye-materialy/kraski-dlja-naruzhnyh-rabot',
-            'jemali' => $this->baseUrl . '/lakokrasochnye-materialy/jemali', // исправлен URL
-            'pokrytija-dlja-dereva' => $this->baseUrl . '/lakokrasochnye-materialy/pokrytija-dlja-dereva', // исправлен URL
-
-            // НОВЫЕ КАТЕГОРИИ - ОБОИ
+            'jemali' => $this->baseUrl . '/lakokrasochnye-materialy/jemali',
+            'pokrytija-dlja-dereva' => $this->baseUrl . '/lakokrasochnye-materialy/pokrytija-dlja-dereva',
             'dekorativnye-oboi' => $this->baseUrl . '/dekor/oboi/dekorativnye-oboi',
             'oboi-pod-pokrasku' => $this->baseUrl . '/dekor/oboi/oboi-pod-pokrasku',
             'fotooboi' => $this->baseUrl . '/dekor/oboi/fotooboi',
-
-            // НОВЫЕ КАТЕГОРИИ - ПЛИТКА
             'plitka' => $this->baseUrl . '/plitka',
         ];
 
@@ -277,8 +257,6 @@ class ObiParserService
 
         $productUrls = [];
         $basicProducts = [];
-
-        // Сначала собираем базовую информацию и URLs
         foreach ($productCards as $card) {
             if (count($basicProducts) >= $limit) break;
 
@@ -298,14 +276,12 @@ class ObiParserService
                 $uniqueExternalIds[] = $externalId;
                 $basicProducts[] = $product;
 
-                // Сохраняем URL для параллельного парсинга
                 if ($product['product_url']) {
                     $productUrls[] = $product['product_url'];
                 }
             }
         }
 
-        // Параллельный парсинг деталей товаров
         if (!empty($productUrls)) {
             $detailedProducts = $this->parseProductsDetailsParallel($productUrls, $basicProducts);
             $products = $detailedProducts;
@@ -319,33 +295,23 @@ class ObiParserService
     private function parseProductCardBasic($card): ?array
     {
         try {
-            // Название товара
             $nameElement = $card->first('._1UlGi a._1FP_W');
+
             if (!$nameElement) {
                 return null;
             }
             $name = trim($nameElement->text());
-
-            // Цена
             $priceElement = $card->first('._3IeOW');
             if (!$priceElement) {
                 return null;
             }
             $price = $this->parsePrice($priceElement->text());
-
-            // Ссылка на товар
             $productUrl = $nameElement->getAttribute('href');
             if ($productUrl && !Str::startsWith($productUrl, 'http')) {
                 $productUrl = $this->baseUrl . $productUrl;
             }
-
-            // ID товара из URL
             $externalId = $this->extractIdFromUrl($productUrl);
-
-            // Изображение
             $imageUrl = $this->extractImageUrl($card);
-
-            // Единица измерения
             $unitElement = $card->first('._3SDdj');
             $unit = $unitElement ? trim($unitElement->text()) : 'шт';
 
@@ -378,14 +344,12 @@ class ObiParserService
         $products = [];
         $urlToProductMap = [];
 
-        // Создаем маппинг URL -> продукт
         foreach ($basicProducts as $product) {
             if ($product['product_url']) {
                 $urlToProductMap[$product['product_url']] = $product;
             }
         }
 
-        // Создаем промисы для параллельных запросов
         $promises = [];
         foreach ($urls as $url) {
             $promises[$url] = $this->client->getAsync($url, [
@@ -396,7 +360,6 @@ class ObiParserService
             ]);
         }
 
-        // Обрабатываем результаты - ИСПРАВЛЕННАЯ СТРОКА
         $results = Utils::settle($promises)->wait();
 
         foreach ($results as $url => $result) {
@@ -406,11 +369,9 @@ class ObiParserService
                     $html = (string)$response->getBody();
                     $details = $this->parseProductDetailsFromHtml($html);
 
-                    // Объединяем базовые данные с деталями
                     if (isset($urlToProductMap[$url])) {
                         $product = array_merge($urlToProductMap[$url], $details);
 
-                        // Вычисляем объем если есть размеры
                         if (!$product['volume_m3'] && ($product['length_mm'] || $product['width_mm'] || $product['height_mm'])) {
                             $product['volume_m3'] = $this->calculateVolume($product);
                         }
@@ -420,21 +381,20 @@ class ObiParserService
 
                 } catch (\Exception $e) {
                     Log::error("Error processing product details for {$url}: " . $e->getMessage());
-                    // Используем базовые данные если детальный парсинг не удался
+
                     if (isset($urlToProductMap[$url])) {
                         $products[] = $urlToProductMap[$url];
                     }
                 }
             } else {
                 Log::error("Failed to fetch product details for {$url}: " . $result['reason']);
-                // Используем базовые данные если запрос не удался
+
                 if (isset($urlToProductMap[$url])) {
                     $products[] = $urlToProductMap[$url];
                 }
             }
         }
 
-        // Добавляем продукты без URL (если такие есть)
         foreach ($basicProducts as $product) {
             if (!$product['product_url'] && !in_array($product, $products, true)) {
                 $products[] = $product;
@@ -459,7 +419,6 @@ class ObiParserService
             'description' => ''
         ];
 
-        // Парсим характеристики из секции "Характеристики"
         $characteristics = $document->find('#Characteristics dl');
 
         foreach ($characteristics as $charSection) {
@@ -480,7 +439,6 @@ class ObiParserService
             }
         }
 
-        // Парсим описание
         $descriptionElement = $document->first('div[data-testid="product-description"]');
         if ($descriptionElement) {
             $details['description'] = trim($descriptionElement->text());
@@ -492,37 +450,29 @@ class ObiParserService
     private function parseProductCard($card): ?array
     {
         try {
-            // Название товара
             $nameElement = $card->first('._1UlGi a._1FP_W');
             if (!$nameElement) {
                 return null;
             }
             $name = trim($nameElement->text());
-
-            // Цена
             $priceElement = $card->first('._3IeOW');
             if (!$priceElement) {
                 return null;
             }
             $price = $this->parsePrice($priceElement->text());
 
-            // Ссылка на товар
             $productUrl = $nameElement->getAttribute('href');
             if ($productUrl && !Str::startsWith($productUrl, 'http')) {
                 $productUrl = $this->baseUrl . $productUrl;
             }
 
-            // ID товара из URL
             $externalId = $this->extractIdFromUrl($productUrl);
 
-            // Изображение
             $imageUrl = $this->extractImageUrl($card);
 
-            // Единица измерения
             $unitElement = $card->first('._3SDdj');
             $unit = $unitElement ? trim($unitElement->text()) : 'шт';
 
-            // Базовые данные
             $productData = [
                 'name' => $name,
                 'price' => $price,
@@ -541,12 +491,10 @@ class ObiParserService
                 'volume_m3' => null,
             ];
 
-            // Парсим детальную информацию если есть ссылка
             if ($productUrl) {
                 $details = $this->parseProductDetails($productUrl);
                 $productData = array_merge($productData, $details);
 
-                // Вычисляем объем если есть размеры
                 if (!$productData['volume_m3'] && ($productData['length_mm'] || $productData['width_mm'] || $productData['height_mm'])) {
                     $productData['volume_m3'] = $this->calculateVolume($productData);
                 }
@@ -650,12 +598,9 @@ class ObiParserService
             'category' => null,
             'consumption_rates' => []
         ];
-
-        // Создаем категорию
         $category = $this->findOrCreateCategory($categorySlug);
         $results['category'] = $category;
 
-        // Сохраняем материалы и цены
         foreach ($products as $productData) {
             try {
                 $externalId = $productData['external_id'];
@@ -670,7 +615,6 @@ class ObiParserService
                 ])->first();
 
                 if ($existingMaterial) {
-                    // Обновляем существующий материал с новыми данными
                     $this->updateMaterialWithDetails($existingMaterial, $productData);
                     $this->updatePrice($existingMaterial->id, $productData['price']);
                     $results['materials'][] = $existingMaterial;
@@ -703,7 +647,6 @@ class ObiParserService
             }
         }
 
-        // Создаем нормы расхода
         if ($category) {
             $rates = $this->createConsumptionRates($results['materials'], $categorySlug);
             $results['consumption_rates'] = $rates;
@@ -743,7 +686,6 @@ class ObiParserService
         $mapping = $this->categoryMapping[$categorySlug];
         $categoryName = $mapping['category_name'];
 
-        // Ищем родительскую категорию
         $parentCategory = MaterialCategory::where('name', 'Стройматериалы OBI')->first();
 
         if (!$parentCategory) {
@@ -753,8 +695,6 @@ class ObiParserService
             ]);
             Log::info("Created parent category: Стройматериалы OBI");
         }
-
-        // Создаем или находим категорию
         $category = MaterialCategory::firstOrCreate(
             ['name' => $categoryName],
             ['parent_id' => $parentCategory->id]
@@ -784,24 +724,19 @@ class ObiParserService
         if (!$field) {
             return;
         }
-
-        // Извлекаем числовое значение из строки
         preg_match('/(\d+[.,]?\d*)/', $value, $matches);
         $numericValue = $matches[1] ?? null;
 
         if ($numericValue) {
             $numericValue = str_replace(',', '.', $numericValue);
 
-            // Для размеров в мм
             if (in_array($field, ['length_mm', 'width_mm', 'height_mm'])) {
                 $details[$field] = (float) $numericValue;
             }
-            // Для веса в кг
             elseif ($field === 'weight_kg') {
                 $details[$field] = (float) $numericValue;
             }
         } else {
-            // Для текстовых полей (бренд, цвет)
             $details[$field] = $value;
         }
     }
@@ -809,7 +744,6 @@ class ObiParserService
     private function calculateVolume(array $details): ?float
     {
         if ($details['length_mm'] && $details['width_mm'] && $details['height_mm']) {
-            // Переводим мм в метры и вычисляем объем в м³
             $volume = ($details['length_mm'] / 1000) *
                 ($details['width_mm'] / 1000) *
                 ($details['height_mm'] / 1000);
@@ -828,8 +762,6 @@ class ObiParserService
         $mapping = $this->categoryMapping[$categorySlug];
         $workTypeName = $mapping['work_type'];
         $baseRate = $mapping['consumption_rate'];
-
-        // Находим вид работ
         $workType = WorkType::where('name', $workTypeName)->first();
         if (!$workType) {
             Log::warning("Work type not found: {$workTypeName}");
@@ -840,13 +772,11 @@ class ObiParserService
 
         foreach ($materials as $material) {
             try {
-                // Если передан массив, получаем объект Material
                 if (is_array($material)) {
                     $material = Material::where('external_id', $material['external_id'])->first();
                     if (!$material) continue;
                 }
 
-                // Проверяем, существует ли уже норма расхода
                 $existingRate = MaterialConsumptionRate::where([
                     'work_type_id' => $workType->id,
                     'material_id' => $material->id,
@@ -856,7 +786,6 @@ class ObiParserService
                     continue;
                 }
 
-                // Создаем норму расхода
                 $rate = MaterialConsumptionRate::create([
                     'work_type_id' => $workType->id,
                     'material_id' => $material->id,

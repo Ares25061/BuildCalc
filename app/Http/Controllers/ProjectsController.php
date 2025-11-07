@@ -20,13 +20,10 @@ class ProjectsController extends Controller
     {
         try {
             $query = Project::where('user_id', Auth::id());
-
-            // Фильтрация по статусу
             if ($request->has('status') && $request->status !== 'all') {
                 $query->where('status', $request->status);
             }
 
-            // Поиск по названию
             if ($request->has('search') && !empty($request->search)) {
                 $searchTerm = '%' . $request->search . '%';
                 $query->where(function($q) use ($searchTerm) {
@@ -34,8 +31,6 @@ class ProjectsController extends Controller
                         ->orWhere('description', 'ILIKE', $searchTerm);
                 });
             }
-
-            // Сортировка
             $sortField = 'updated_at';
             $sortDirection = 'DESC';
 
@@ -198,7 +193,6 @@ class ProjectsController extends Controller
         }
 
         try {
-            // Получаем материалы проекта через project_items
             $materials = SelectedProjectMaterial::whereHas('projectItem', function($query) use ($projectId) {
                 $query->where('project_id', $projectId);
             })
@@ -315,9 +309,7 @@ class ProjectsController extends Controller
         ]);
 
         try {
-            // Get next sort order
             $maxSortOrder = ProjectItem::where('project_id', $projectId)->max('sort_order') ?? 0;
-
             $projectItem = ProjectItem::create([
                 'project_id' => $projectId,
                 'work_type_id' => $request->work_type_id,
@@ -326,7 +318,6 @@ class ProjectsController extends Controller
                 'sort_order' => $maxSortOrder + 1,
                 'created_at' => now()
             ]);
-
             $projectItem->load('workType');
 
             return response()->json([
@@ -407,12 +398,8 @@ class ProjectsController extends Controller
         }
 
         try {
-            // Delete associated materials first
             SelectedProjectMaterial::where('project_item_id', $itemId)->delete();
-
-            // Delete the work position
             $projectItem->delete();
-
             return response()->json(['message' => 'Work position deleted successfully']);
 
         } catch (\Exception $e) {
@@ -479,17 +466,14 @@ class ProjectsController extends Controller
         $request->validate([
             'material_id' => 'required|exists:materials,id',
             'quantity' => 'required|numeric|min:0.001',
-            'project_item_id' => 'nullable|exists:project_items,id' // Добавляем возможность указать позицию
+            'project_item_id' => 'nullable|exists:project_items,id'
         ]);
 
         try {
             $projectItemId = $request->project_item_id;
 
-            // Если project_item_id не указан, используем логику по умолчанию
             if (!$projectItemId) {
                 Log::info('No project_item_id provided, using default logic');
-
-                // Получаем или создаем базовый work_type для материалов
                 $workType = WorkType::firstOrCreate(
                     ['id' => 1],
                     [
@@ -499,8 +483,6 @@ class ProjectsController extends Controller
                         'created_at' => now()
                     ]
                 );
-
-                // Создаем или находим project_item для этого проекта
                 $projectItem = ProjectItem::firstOrCreate([
                     'project_id' => $projectId,
                     'work_type_id' => $workType->id,
@@ -514,7 +496,6 @@ class ProjectsController extends Controller
                 $projectItemId = $projectItem->id;
                 Log::info('Using default project item', ['project_item_id' => $projectItemId]);
             } else {
-                // Проверяем, что указанная позиция принадлежит проекту
                 $projectItem = ProjectItem::where('id', $projectItemId)
                     ->where('project_id', $projectId)
                     ->first();
@@ -524,52 +505,38 @@ class ProjectsController extends Controller
                 }
                 Log::info('Using specified project item', ['project_item_id' => $projectItemId]);
             }
-
-            // Проверяем, есть ли уже такой материал в указанной позиции
             $existingMaterial = SelectedProjectMaterial::where('project_item_id', $projectItemId)
                 ->where('material_id', $request->material_id)
                 ->first();
 
             if ($existingMaterial) {
-                // Если материал уже есть, обновляем количество
                 $existingMaterial->update([
                     'quantity' => $existingMaterial->quantity + $request->quantity
                 ]);
-
                 $existingMaterial->load(['material', 'material.prices', 'material.supplier']);
-
                 Log::info('Material quantity updated', [
                     'material_id' => $request->material_id,
                     'project_item_id' => $projectItemId,
                     'new_quantity' => $existingMaterial->quantity
                 ]);
-
                 return response()->json([
                     'message' => 'Material quantity updated in project',
                     'data' => $existingMaterial
                 ]);
             }
-
-            // Создаем новую запись в указанной позиции
             $selectedMaterial = SelectedProjectMaterial::create([
                 'project_item_id' => $projectItemId,
                 'material_id' => $request->material_id,
                 'quantity' => $request->quantity,
                 'created_at' => now()
             ]);
-
             Log::info('New material added to specific position', [
                 'selected_material_id' => $selectedMaterial->id,
                 'material_id' => $request->material_id,
                 'project_item_id' => $projectItemId
             ]);
-
-            // Загружаем связанные данные для ответа
             $selectedMaterial->load(['material', 'material.prices', 'material.supplier']);
-
-            // Обновляем общую стоимость проекта
             $this->updateProjectTotalCost($projectId);
-
             return response()->json([
                 'message' => 'Material added to project',
                 'data' => $selectedMaterial
@@ -607,16 +574,12 @@ class ProjectsController extends Controller
             if (!$selectedMaterial) {
                 return response()->json(['message' => 'Material not found in project'], 404);
             }
-
             $request->validate([
                 'quantity' => 'required|numeric|min:0.001'
             ]);
-
             $selectedMaterial->update([
                 'quantity' => $request->quantity
             ]);
-
-            // Обновляем общую стоимость проекта
             $this->updateProjectTotalCost($projectId);
 
             $selectedMaterial->load(['material', 'material.prices', 'material.supplier']);
@@ -656,12 +619,8 @@ class ProjectsController extends Controller
             if (!$selectedMaterial) {
                 return response()->json(['message' => 'Material not found in project'], 404);
             }
-
             $selectedMaterial->delete();
-
-            // Обновляем общую стоимость проекта
             $this->updateProjectTotalCost($projectId);
-
             return response()->json(['message' => 'Material removed from project']);
 
         } catch (\Exception $e) {

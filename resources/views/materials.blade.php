@@ -17,21 +17,14 @@
     <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
         {{ $category->name }}
     </h1>
-
-    <!-- Сетка: Фильтр | Карточки | Калькулятор -->
     <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] gap-8">
-        <!-- ✅ Фильтр -->
         <aside class="bg-white p-6 shadow-md rounded-2xl border border-gray-200 space-y-4 h-fit top-6 self-start">
             <h2 class="text-lg font-semibold text-gray-900 text-center">Фильтры</h2>
-
-            <!-- Название -->
             <div>
                 <label class="text-sm text-gray-700 font-medium">Название</label>
                 <input type="text" id="filter-name"
                        class="w-full mt-1 border border-gray-300 rounded-lg p-2.5 text-sm focus:border-orange-500 focus:ring-orange-500 outline-none">
             </div>
-
-            <!-- Бренд -->
             <div>
                 <label class="text-sm text-gray-700 font-medium">Бренд</label>
                 <select id="filter-brand"
@@ -39,8 +32,6 @@
                     <option value="">Все</option>
                 </select>
             </div>
-
-            <!-- Цвет -->
             <div>
                 <label class="text-sm text-gray-700 font-medium">Цвет</label>
                 <select id="filter-color"
@@ -48,8 +39,6 @@
                     <option value="">Любой</option>
                 </select>
             </div>
-
-            <!-- Цена -->
             <div>
                 <label class="text-sm text-gray-700 font-medium">Цена, ₽</label>
                 <div class="flex gap-2 mt-1">
@@ -67,18 +56,13 @@
                     <option value="">Все поставщики</option>
                 </select>
             </div>
-
-            <!-- Кнопка -->
             <button id="apply-filters"
                     class="bg-orange-400 hover:bg-orange-500 text-white w-full py-2.5 text-sm font-medium rounded-lg transition">
                 Применить
             </button>
 
         </aside>
-
-        <!-- ✅ Карточки -->
         <section>
-            <!-- Выбор проекта для добавления материалов -->
             <div id="project-selector" class="mb-6 bg-white p-4 rounded-2xl border border-gray-200 shadow hidden">
                 <div class="flex items-center justify-between">
                     <div>
@@ -107,21 +91,15 @@
             </div>
 
             <div id="materials-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                <!-- Loading state -->
                 <div id="loading-state" class="col-span-3 text-center py-12">
                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
                     <p class="text-gray-600">Загрузка материалов...</p>
                 </div>
             </div>
         </section>
-
-        <!-- ✅ Калькулятор -->
         <aside class="bg-white p-6 shadow-md rounded-2xl border border-gray-200 space-y-4 h-fit top-6 self-start" >
             <h3 class="text-lg font-semibold text-gray-900 gap-2 text-center">Калькулятор</h3>
-
-            <!-- Динамический калькулятор в зависимости от категории -->
             @if(str_contains(strtolower($category->name), 'кирпич') || str_contains(strtolower($category->name), 'блок'))
-                <!-- Калькулятор кирпича -->
                 <div>
                     <label class="text-sm text-gray-700 font-medium">Размер кирпича</label>
                     <select class="w-full mt-1 border border-gray-300 rounded-lg p-2.5 text-sm focus:border-orange-500 focus:ring-orange-500">
@@ -157,10 +135,7 @@
                     </select>
                 </div>
             @elseif(str_contains(strtolower($category->name), 'обои'))
-                <!-- Калькулятор обоев -->
-                <!-- Компактный калькулятор обоев -->
                 <div class="space-y-3">
-                    <!-- Размеры комнаты -->
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="text-xs text-gray-700 font-medium">Ширина комнаты</label>
@@ -185,8 +160,6 @@
                             <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-xs">м</span>
                         </div>
                     </div>
-
-                    <!-- Окна и двери в аккордеоне -->
                     <div x-data="{ open: false }" class="border border-gray-200 rounded-lg">
                         <button @click="open = !open" class="w-full flex items-center justify-between p-2 text-xs font-medium text-gray-700">
                             <span>Окна и двери</span>
@@ -209,8 +182,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Размеры обоев -->
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="text-xs text-gray-700 font-medium">Ширина рулона</label>
@@ -246,7 +217,6 @@
                     </div>
                 </div>
             @elseif(str_contains(strtolower($category->name), 'Эмал'))
-                <!-- Калькулятор краски -->
                 <div>
                     <label class="text-sm text-gray-700 font-medium">Площадь поверхности</label>
                     <div class="relative mt-1">
@@ -264,7 +234,6 @@
                     </select>
                 </div>
             @else
-                <!-- Общий калькулятор -->
                 <div>
                     <label class="text-sm text-gray-700 font-medium">Площадь/Объём</label>
                     <div class="relative mt-1">
@@ -300,7 +269,6 @@
 </div>
 
 <script>
-    // Global variables
     let allMaterials = [];
     let filteredMaterials = [];
     let userProjects = [];
@@ -309,13 +277,9 @@
     const currentCategoryId = {{ $category->id }};
     const urlParams = new URLSearchParams(window.location.search);
     const projectIdFromUrl = urlParams.get('project_id');
-
-    // Fetch materials from API for current category
     async function loadMaterials() {
         try {
             showLoading();
-
-            // Use the correct API endpoint with category filter
             const baseUrl = window.location.origin;
             const response = await fetch(`${baseUrl}/api/materials?category_id=${currentCategoryId}`);
 
@@ -325,19 +289,11 @@
 
             allMaterials = await response.json();
             console.log('Loaded materials for category:', allMaterials);
-
             filteredMaterials = [...allMaterials];
-
-            // Populate filter dropdowns
             populateFilters();
-
-            // Display materials
             displayMaterials();
-
-            // Load user projects
             await loadUserProjects();
 
-            // If project_id is in URL, preselect it
             if (projectIdFromUrl) {
                 document.getElementById('project-select').value = projectIdFromUrl;
             }
@@ -349,7 +305,6 @@
         }
     }
 
-    // Load user projects for selector
     async function loadUserProjects() {
         const token = localStorage.getItem('auth_token');
         if (!token) return;
@@ -375,8 +330,6 @@
     function populateProjectSelector() {
         const projectSelect = document.getElementById('project-select');
         if (!projectSelect) return;
-
-        // Clear existing options except the first one
         projectSelect.innerHTML = '<option value="">Выберите проект...</option>';
 
         userProjects.forEach(project => {
@@ -393,29 +346,21 @@
         const supplierSelect = document.getElementById('filter-supplier');
 
         if (!brandSelect || !colorSelect || !supplierSelect) return;
-
-        // Get unique brands, colors, and suppliers from filtered materials
         const brands = [...new Set(allMaterials.map(m => m.brand).filter(Boolean))];
         const colors = [...new Set(allMaterials.map(m => m.color).filter(Boolean))];
         const suppliers = [...new Set(allMaterials.map(m => m.supplier?.name).filter(Boolean))];
-
-        // Populate brand filter
         brands.forEach(brand => {
             const option = document.createElement('option');
             option.value = brand;
             option.textContent = brand;
             brandSelect.appendChild(option);
         });
-
-        // Populate color filter
         colors.forEach(color => {
             const option = document.createElement('option');
             option.value = color;
             option.textContent = color;
             colorSelect.appendChild(option);
         });
-
-        // Populate supplier filter
         suppliers.forEach(supplier => {
             const option = document.createElement('option');
             option.value = supplier;
@@ -452,28 +397,19 @@
     function createMaterialCard(material) {
         const card = document.createElement('div');
         card.className = 'bg-white rounded-xl border border-gray-200 shadow hover:shadow-xl transition flex flex-col overflow-hidden w-full min-h-[430px]';
-
-        // Format dimensions
         const dimensions = material.length_mm && material.width_mm && material.height_mm
             ? `${material.length_mm}×${material.width_mm}×${material.height_mm}`
             : null;
-
-        // Get latest price from prices array
         const price = material.prices && material.prices.length > 0
             ? material.prices[material.prices.length - 1].price
             : null;
-
-        // Get supplier name
         const supplierName = material.supplier ? material.supplier.name : 'Не указан';
-
-        // Очищаем URL картинки от HTML-сущностей
         let imageUrl = material.image_url;
         if (imageUrl) {
             imageUrl = imageUrl.replace(/&amp;/g, '&');
         }
 
         card.innerHTML = `
-        <!-- Фото -->
         <div class="h-40 bg-white flex items-center justify-center p-4">
             ${imageUrl
             ? `<img src="${imageUrl}"
@@ -488,8 +424,6 @@
                 </div>`
         }
         </div>
-
-        <!-- Контент -->
         <div class=" p-4 text-sm text-gray-700 flex flex-col gap-1 flex-grow">
             <h3 class="font-semibold text-lg text-gray-900 h-fit overflow-hidden">
                 ${material.name}
@@ -505,8 +439,6 @@
             <p class="text-xl font-bold text-gray-900 mt-auto">
                 ${price ? `${formatPrice(price)} ₽ / ${material.unit}` : 'Цена не указана'}
             </p>
-
-            <!-- Количество -->
             <div class="mt-3 mx-auto border border-gray-300 rounded-xl px-4 py-2 w-full flex items-center justify-between gap-3">
                 <button onclick="changeQuantity(this, -1)" class="text-2xl leading-none text-gray-600 hover:text-black">–</button>
                 <input type="number" min="1" value="1" class="quantity-input w-12 text-center outline-none bg-transparent text-lg font-medium border-0 focus:ring-0">
@@ -528,7 +460,6 @@
         return card;
     }
 
-    // Функция изменения количества
     function changeQuantity(button, change) {
         const container = button.closest('div');
         const input = container.querySelector('.quantity-input');
@@ -538,8 +469,6 @@
         if (newValue < 1) newValue = 1;
         input.value = newValue;
     }
-
-    // Функция добавления в смету
     function addToEstimate(materialId) {
         const token = localStorage.getItem('auth_token');
         if (!token) {
@@ -547,13 +476,9 @@
             window.location.href = '/login';
             return;
         }
-
-        // Find the material card and get quantity
         const materialCard = document.querySelector(`[onclick="addToEstimate(${materialId})"]`).closest('.bg-white');
         const quantityInput = materialCard.querySelector('.quantity-input');
         const quantity = parseInt(quantityInput.value) || 1;
-
-        // Find material data
         const material = allMaterials.find(m => m.id === materialId);
         if (!material) return;
 
@@ -564,15 +489,9 @@
             unit: material.unit,
             price: material.prices && material.prices.length > 0 ? material.prices[material.prices.length - 1].price : 0
         };
-
-        // Сбрасываем выбранную позицию
         selectedWorkPositionId = null;
-
-        // Сначала выбираем проект
         showProjectSelector();
     }
-
-    // Загрузка позиций для выбранного проекта
     async function loadWorkPositionsForProject() {
         const projectSelect = document.getElementById('project-select');
         const selectedProjectId = projectSelect.value;
@@ -604,8 +523,6 @@
             showError('Ошибка при загрузке позиций работ: ' + error.message);
         }
     }
-
-    // Показать выбор позиции работ
     function showWorkPositionSelector(workPositions, projectId) {
         const selector = document.getElementById('project-selector');
         if (!selector) return;
@@ -662,8 +579,6 @@
 
         selector.classList.remove('hidden');
     }
-
-    // Показать выбор проекта
     function showProjectSelector() {
         const selector = document.getElementById('project-selector');
         if (!selector) return;
@@ -699,8 +614,6 @@
         selector.classList.remove('hidden');
         selector.scrollIntoView({ behavior: 'smooth' });
     }
-
-    // Скрыть выбор проекта
     function hideProjectSelector() {
         const selector = document.getElementById('project-selector');
         if (selector) {
@@ -709,7 +622,6 @@
         selectedMaterial = null;
         selectedWorkPositionId = null;
     }
-    // Добавить материал в выбранный проект и позицию
     async function addToSelectedProjectAndPosition(projectId) {
         if (!selectedMaterial) {
             alert('Ошибка: материал не выбран');
@@ -721,8 +633,6 @@
             alert('Ошибка авторизации');
             return;
         }
-
-        // Получаем выбранную позицию
         const workPositionSelect = document.getElementById('work-position-select');
         const selectedWorkPositionId = workPositionSelect ? workPositionSelect.value : null;
 
@@ -739,7 +649,6 @@
                 quantity: selectedMaterial.quantity
             };
 
-            // Добавляем project_item_id только если он выбран
             if (selectedWorkPositionId) {
                 requestBody.project_item_id = selectedWorkPositionId;
             }
@@ -769,7 +678,6 @@
                 showSuccess(successMessage);
                 hideProjectSelector();
 
-                // Redirect to project page if project_id was in URL
                 if (projectIdFromUrl) {
                     setTimeout(() => {
                         window.location.href = `/project/${projectId}`;
@@ -800,7 +708,6 @@
         }
     }
 
-    // Добавьте эту функцию для обработки ошибок загрузки изображений
     function handleImageError(img) {
         img.style.display = 'none';
         const parent = img.parentNode;
@@ -827,27 +734,22 @@
         const priceMax = document.getElementById('filter-price-max')?.value || '';
 
         filteredMaterials = allMaterials.filter(material => {
-            // Name filter
             if (nameFilter && !material.name.toLowerCase().includes(nameFilter)) {
                 return false;
             }
 
-            // Brand filter
             if (brandFilter && material.brand !== brandFilter) {
                 return false;
             }
 
-            // Color filter
             if (colorFilter && material.color !== colorFilter) {
                 return false;
             }
 
-            // Supplier filter
             if (supplierFilter && material.supplier?.name !== supplierFilter) {
                 return false;
             }
 
-            // Price filter
             const price = material.prices && material.prices.length > 0
                 ? material.prices[material.prices.length - 1].price
                 : 0;
@@ -895,7 +797,6 @@
     }
 
     function showSuccess(message) {
-        // Создаем уведомление об успехе
         const notification = document.createElement('div');
         notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
         notification.textContent = message;
@@ -906,19 +807,14 @@
         }, 3000);
     }
 
-    // Event listeners
     document.addEventListener('DOMContentLoaded', function() {
         const materialsContainer = document.getElementById('materials-container');
         if (materialsContainer) {
             loadMaterials();
-
-            // Filter button
             const applyButton = document.getElementById('apply-filters');
             if (applyButton) {
                 applyButton.addEventListener('click', applyFilters);
             }
-
-            // Enter key in filter inputs
             const nameFilter = document.getElementById('filter-name');
             if (nameFilter) {
                 nameFilter.addEventListener('keypress', function(e) {

@@ -13,20 +13,13 @@ class MaterialsController extends Controller
      */
     public function showCategoryMaterials($slug)
     {
-        // Заменяем нижние подчёркивания обратно на пробелы
         $categoryName = str_replace('_', ' ', $slug);
-
-        // Ищем категорию по slug или имени
         $category = MaterialCategory::where('slug', $slug)
             ->orWhere('name', $categoryName)
             ->firstOrFail();
-
-        // Get materials for this category with relationships
         $materials = Material::with(['category', 'prices', 'supplier'])
             ->where('category_id', $category->id)
             ->get();
-
-        // Get all categories for navigation
         $categories = MaterialCategory::whereNotNull('parent_id')->get();
 
         return view('materials', compact('materials', 'categories', 'category'));
@@ -38,8 +31,6 @@ class MaterialsController extends Controller
     public function index(Request $request)
     {
         $query = Material::with(['category', 'prices', 'supplier']);
-
-        // Filter by category if provided
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }

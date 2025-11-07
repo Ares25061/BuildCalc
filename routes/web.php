@@ -16,13 +16,10 @@ Route::get('/register', function () {
     return view('register');
 })->name('register');
 
-// Категории
 Route::get('/categories', [MaterialCategoryController::class, 'indexWeb'])->name('categories.index');
 
-// Материалы конкретной категории (обновленный маршрут без /materials)
 Route::get('/categories/{slug}', [MaterialCategoryController::class, 'showCategoryMaterials'])->name('categories.materials');
 
-// Старые маршруты для обратной совместимостиц
 Route::get('/materials/{id}', fn($id) => view('materials'));
 
 Route::get('/project', function () {
@@ -43,10 +40,9 @@ Route::get('/project', function () {
 })->name('project.index');
 
 Route::get('/project/create', function () {
-    return view('create_project'); // без .blade.php
+    return view('create_project');
 })->name('project.create');
 
-// Замените существующий маршрут просмотра сметы
 Route::get('/project/{id}', function ($id) {
     return view('show_projects', ['projectId' => $id]);
 })->name('project.show');

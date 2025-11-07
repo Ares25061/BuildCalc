@@ -10,15 +10,12 @@
 
 @include('layouts.nav')
 
-<!-- Заголовок -->
 <div class="bg-white shadow-sm">
     <div class="max-w-7xl mx-auto py-10 px-4">
         <h1 class="text-3xl font-bold text-gray-900">Каталог строительных материалов</h1>
         <p class="text-gray-600 mt-2">Выберите категорию материала для расчёта и составления сметы</p>
     </div>
 </div>
-
-<!-- Категории -->
 <div class="max-w-7xl mx-auto py-12 px-4">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center mx-auto">
 

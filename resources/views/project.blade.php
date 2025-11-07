@@ -12,8 +12,6 @@
 @include('layouts.nav')
 
 <div class="max-w-7xl mx-auto px-4 py-10">
-
-    <!-- Заголовок -->
     <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Мои сметы</h1>
@@ -25,8 +23,6 @@
             + Создать смету
         </button>
     </div>
-
-    <!-- Фильтры -->
     <div class="bg-white p-5 rounded-xl shadow border border-gray-200 mb-10 flex flex-wrap gap-4 items-center justify-between">
 
         <input type="text" id="searchInput"
@@ -62,17 +58,12 @@
             <option value="name_desc">Сортировать: по названию (Я-А)</option>
         </select>
     </div>
-
-    <!-- Контейнер для проектов -->
     <div id="projectsContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-7">
-        <!-- Проекты будут загружаться здесь -->
         <div id="loadingMessage" class="col-span-full text-center py-10">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
             <p class="text-gray-600 mt-4">Загрузка смет...</p>
         </div>
     </div>
-
-    <!-- Сообщение если нет проектов -->
     <div id="noProjectsMessage" class="hidden text-center py-10">
         <div class="bg-white p-8 rounded-2xl border border-gray-200">
             <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,14 +86,10 @@
     let currentSearch = '';
     let currentSort = 'date_desc';
     let debounceTimer;
-
-    // Дебаунс для поиска
     function debounce(func, wait) {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(func, wait);
     }
-
-    // Загрузка проектов при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
         loadProjects();
     });
@@ -116,10 +103,7 @@
         }
 
         try {
-            // Показываем сообщение о загрузке
             showLoading();
-
-            // Строим URL с параметрами фильтрации
             const params = new URLSearchParams();
 
             if (currentFilter !== 'all') {
@@ -150,7 +134,6 @@
                 allProjects = projects;
                 renderProjects();
             } else if (response.status === 401) {
-                // Не авторизован - перенаправляем на логин
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('user');
                 window.location.href = '/login';
@@ -168,12 +151,10 @@
         const container = document.getElementById('projectsContainer');
         const noProjectsMessage = document.getElementById('noProjectsMessage');
 
-        // Скрываем сообщение "нет проектов"
         if (noProjectsMessage) {
             noProjectsMessage.classList.add('hidden');
         }
 
-        // Показываем индикатор загрузки
         container.innerHTML = `
             <div id="loadingMessage" class="col-span-full text-center py-10">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
@@ -191,23 +172,19 @@
             return;
         }
 
-        // Очищаем контейнер
         container.innerHTML = '';
 
         if (allProjects.length === 0) {
-            // Показываем сообщение "нет проектов"
             if (noProjectsMessage) {
                 noProjectsMessage.classList.remove('hidden');
             }
             return;
         }
 
-        // Скрываем сообщение "нет проектов"
         if (noProjectsMessage) {
             noProjectsMessage.classList.add('hidden');
         }
 
-        // Генерируем HTML для проектов
         const projectsHTML = allProjects.map(project => `
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow hover:shadow-lg transition flex flex-col">
                 <h3 class="text-lg font-semibold text-gray-900">${escapeHtml(project.name)}</h3>
@@ -239,7 +216,6 @@
     function setFilter(status) {
         currentFilter = status;
 
-        // Обновляем активные кнопки
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('bg-orange-50', 'text-orange-600', 'shadow-sm');
             btn.classList.add('bg-gray-100', 'text-gray-700');
@@ -251,24 +227,23 @@
             activeBtn.classList.add('bg-orange-50', 'text-orange-600', 'shadow-sm');
         }
 
-        loadProjects(); // Перезагружаем проекты с новым фильтром
+        loadProjects();
     }
 
     function filterProjects() {
         currentSearch = document.getElementById('searchInput').value;
-        loadProjects(); // Перезагружаем проекты с новым поисковым запросом
+        loadProjects();
     }
 
     function sortProjects() {
         currentSort = document.getElementById('sortSelect').value;
-        loadProjects(); // Перезагружаем проекты с новой сортировкой
+        loadProjects();
     }
 
     function createNewProject() {
         window.location.href = '/project/create';
     }
 
-    // Вспомогательные функции
     function getStatusClass(status) {
         switch (status) {
             case 'in_progress': return 'bg-blue-100 text-blue-700';
@@ -315,7 +290,6 @@
         const container = document.getElementById('projectsContainer');
         const noProjectsMessage = document.getElementById('noProjectsMessage');
 
-        // Скрываем сообщение "нет проектов"
         if (noProjectsMessage) {
             noProjectsMessage.classList.add('hidden');
         }
@@ -338,7 +312,6 @@
         }
     }
 
-    // Функция для быстрого создания проекта
     async function createQuickProject() {
         const projectName = prompt('Введите название сметы:');
 
@@ -370,7 +343,6 @@
             if (response.ok) {
                 const project = await response.json();
                 showSuccess('Смета создана!');
-                // Перезагружаем список проектов
                 loadProjects();
             } else {
                 const error = await response.json();
@@ -383,7 +355,6 @@
     }
 
     function showSuccess(message) {
-        // Создаем временное уведомление
         const notification = document.createElement('div');
         notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
         notification.textContent = message;

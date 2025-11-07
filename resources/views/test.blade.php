@@ -9,15 +9,12 @@
 
 <body class="bg-gray-100">
 
-<!-- Навигация (заглушка) -->
 @include('layouts.nav')
 
 <div class="max-w-7xl mx-auto px-4 py-10 space-y-10">
 
-    <!-- ✅ Улучшенная шапка проекта -->
     <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <!-- Левая часть: название и информация -->
             <div class="flex-1">
                 <div class="flex items-center gap-4 mb-4">
                     <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">Ремонт кухни</h1>
@@ -29,14 +26,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                     </button>
-
                     <button class="flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-200 font-medium text-sm whitespace-nowrap">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
                     </button>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="p-2 bg-blue-100 rounded-lg">
@@ -49,7 +44,6 @@
                             <p class="text-sm font-medium">01.11.2025</p>
                         </div>
                     </div>
-
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="p-2 bg-green-100 rounded-lg">
                             <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +55,6 @@
                             <p class="text-sm font-medium">В работе</p>
                         </div>
                     </div>
-
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="p-2 bg-purple-100 rounded-lg">
                             <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +66,6 @@
                             <p class="text-sm font-medium">6 материалов</p>
                         </div>
                     </div>
-
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="p-2 bg-orange-100 rounded-lg">
                             <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,17 +78,11 @@
                         </div>
                     </div>
                 </div>
-
             </div>
-
-            <!-- Правая часть: кнопки действий -->
             <div class="flex flex-col sm:flex-row gap-3 lg:justify-end">
-
             </div>
         </div>
     </div>
-
-    <!-- ✅ Бюджет проекта -->
     <div class="bg-white p-6 rounded-2xl shadow border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Бюджет проекта</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -114,8 +100,6 @@
             </div>
         </div>
     </div>
-
-    <!-- ✅ Улучшенная таблица позиций -->
     <div class="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -136,8 +120,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Header таблицы -->
         <div class="grid grid-cols-12 bg-gray-50 text-gray-600 text-xs font-medium px-6 py-3">
             <div class="col-span-5">Наименование</div>
             <div class="col-span-1 text-center">Ед.</div>
@@ -146,8 +128,6 @@
             <div class="col-span-2 text-right">Сумма</div>
             <div class="col-span-1 text-center"></div>
         </div>
-
-        <!-- Строки таблицы с реальными материалами для кухни -->
         <div class="grid grid-cols-12 px-6 py-3 border-t text-sm items-center hover:bg-gray-50 group">
             <div class="col-span-5">
                 <div class="font-medium text-gray-900">Плитка настенная</div>
@@ -167,7 +147,6 @@
                 </button>
             </div>
         </div>
-
         <div class="grid grid-cols-12 px-6 py-3 border-t text-sm items-center hover:bg-gray-50 group">
             <div class="col-span-5">
                 <div class="font-medium text-gray-900">Плитка напольная</div>
@@ -187,8 +166,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- Новые добавленные материалы -->
         <div class="grid grid-cols-12 px-6 py-3 border-t text-sm items-center hover:bg-gray-50 group">
             <div class="col-span-5">
                 <div class="font-medium text-gray-900">Обои виниловые</div>
@@ -208,7 +185,6 @@
                 </button>
             </div>
         </div>
-
         <div class="grid grid-cols-12 px-6 py-3 border-t text-sm items-center hover:bg-gray-50 group">
             <div class="col-span-5">
                 <div class="font-medium text-gray-900">Шпатлевка финишная Vetonit LR+</div>
@@ -228,7 +204,6 @@
                 </button>
             </div>
         </div>
-
         <div class="grid grid-cols-12 px-6 py-3 border-t text-sm items-center hover:bg-gray-50 group">
             <div class="col-span-5">
                 <div class="font-medium text-gray-900">Грунтовка Ceresit CT 17 PRO</div>
@@ -248,7 +223,6 @@
                 </button>
             </div>
         </div>
-
         <div class="grid grid-cols-12 px-6 py-3 border-t text-sm items-center hover:bg-gray-50 group">
             <div class="col-span-5">
                 <div class="font-medium text-gray-900">Плиточный клей UNIS 2000</div>
@@ -268,7 +242,6 @@
                 </button>
             </div>
         </div>
-
         <div class="grid grid-cols-12 px-6 py-3 border-t text-sm items-center hover:bg-gray-50 group">
             <div class="col-span-5">
                 <div class="font-medium text-gray-900">Затирка для плитки</div>
@@ -288,8 +261,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- Кнопка "Добавить материал" -->
         <div class="flex justify-between items-center p-4 border-t">
             <div class="text-sm text-gray-600">
                 Всего позиций: <span class="font-medium">6</span>
@@ -303,30 +274,23 @@
             </a>
         </div>
     </div>
-
-    <!-- ✅ Панель итогов -->
     <div class="flex justify-end">
         <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow text-right w-full md:w-1/3">
             <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">Финансовый итог</h3>
-
             <div class="space-y-3">
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Стоимость материалов:</span>
                     <span class="font-semibold text-gray-900">16 747 ₽</span>
                 </div>
-
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Стоимость работ:</span>
                     <span class="font-semibold text-gray-900">0 ₽</span>
                 </div>
-
                 <hr class="my-3 border-gray-300">
-
                 <div class="flex justify-between items-center text-xl font-bold text-green-600">
                     <span>Итого:</span>
                     <span>16 747 ₽</span>
                 </div>
-
                 <div class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
                     <div class="flex items-center gap-2 text-sm text-green-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,8 +302,6 @@
             </div>
         </div>
     </div>
-
 </div>
-
 </body>
 </html>

@@ -43,7 +43,6 @@ class SiteConnectionTester
                 echo "   Ошибка: {$results[$name]['error']}\n";
             }
 
-            // Пауза между запросами
             sleep(2);
         }
 
@@ -55,10 +54,8 @@ class SiteConnectionTester
         $startTime = microtime(true);
 
         try {
-            // Вариант 1: cURL (предпочтительный)
             $result = $this->testWithCurl($url);
 
-            // Если cURL не сработал, пробуем file_get_contents с контекстом
             if (!$result['success']) {
                 $result = $this->testWithFileGetContents($url);
             }
@@ -151,8 +148,6 @@ class SiteConnectionTester
                 'time' => round($time, 2)
             ];
         }
-
-        // Получаем HTTP-код из ответа
         $httpCode = 200;
         if (isset($http_response_header[0])) {
             preg_match('/HTTP\/\d\.\d\s+(\d+)/', $http_response_header[0], $matches);
@@ -185,7 +180,7 @@ class SiteConnectionTester
 
         foreach ($results as $name => $result) {
             $status = $result['success'] ? '✓ ДОСТУПЕН' : '✗ НЕДОСТУПЕН';
-            $color = $result['success'] ? '32' : '31'; // Зеленый/Красный
+            $color = $result['success'] ? '32' : '31';
 
             echo sprintf("\033[%sm%-20s %-15s %-6s сек. HTTP: %d\033[0m\n",
                 $color,
@@ -217,7 +212,6 @@ class SiteConnectionTester
     }
 }
 
-// Дополнительный класс для расширенной проверки с прокси
 class AdvancedSiteTester extends SiteConnectionTester
 {
     private $proxies;
@@ -265,25 +259,11 @@ class AdvancedSiteTester extends SiteConnectionTester
     }
 }
 
-// Использование
 echo "Запуск проверки подключения к строительным сайтам...\n\n";
 
 $tester = new SiteConnectionTester();
 $results = $tester->testPopularSites();
 $report = $tester->generateReport($results);
 
-// Сохранение результатов в файл
 file_put_contents('site_connection_report.json', json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 echo "\nПодробный отчет сохранен в site_connection_report.json\n";
-
-// Пример использования с прокси (раскомментируйте при необходимости)
-/*
-$advancedTester = new AdvancedSiteTester();
-$advancedTester->setProxies([
-    'proxy1.example.com:8080',
-    'proxy2.example.com:3128',
-]);
-
-$proxyResult = $advancedTester->testWithProxy('https://leroymerlin.ru');
-print_r($proxyResult);
-*/

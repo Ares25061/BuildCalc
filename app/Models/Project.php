@@ -75,10 +75,10 @@ class Project extends Model
         return $this->hasManyThrough(
             SelectedProjectMaterial::class,
             ProjectItem::class,
-            'project_id', // Foreign key on ProjectItem table
-            'project_item_id', // Foreign key on SelectedProjectMaterial table
-            'id', // Local key on Project table
-            'id' // Local key on ProjectItem table
+            'project_id',
+            'project_item_id',
+            'id',
+            'id'
         );
     }
 }

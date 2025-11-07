@@ -9,7 +9,6 @@ class BasicDataSeeder extends Seeder
 {
     public function run()
     {
-        // Базовые виды работ
         $workTypes = [
             ['id' => 1, 'name' => 'Материалы', 'unit' => 'шт', 'description' => 'Основные материалы проекта'],
             ['id' => 2, 'name' => 'Электрика', 'unit' => 'точка', 'description' => 'Электромонтажные работы'],
@@ -34,8 +33,6 @@ class BasicDataSeeder extends Seeder
                 ]
             );
         }
-
-        // Поставщик OBI
         DB::table('suppliers')->updateOrInsert(
             ['name' => 'OBI'],
             [
@@ -46,6 +43,6 @@ class BasicDataSeeder extends Seeder
             ]
         );
 
-        $this->command->info('✅ Basic work types and supplier created!');
+        $this->command->info('Виды работ и поставщик успешно созданы');
     }
 }

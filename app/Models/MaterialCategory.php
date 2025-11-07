@@ -74,8 +74,6 @@ class MaterialCategory extends Model
         if ($value) {
             return $value;
         }
-
-        // Дефолтные картинки для разных категорий
         $defaultImages = [
             'краск' => 'https://avatars.mds.yandex.net/i?id=9b8bb59788106aac9a5dc186c77a33e6bb57f285-3071255-images-thumbs&n=13',
             'кирпич' => 'https://i.freza.co/diygoods/52792/kirpich_oblitsovochniy_odinarniy_m150_1_pic.jpg',
@@ -92,7 +90,6 @@ class MaterialCategory extends Model
             }
         }
 
-        // Дефолтная картинка если ничего не подошло
         return 'https://via.placeholder.com/300x200?text=' . urlencode($this->name);
     }
 }

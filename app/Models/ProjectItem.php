@@ -27,7 +27,7 @@ class ProjectItem extends Model
      *
      * @var bool
      */
-    public $timestamps = false; // Измените на false
+    public $timestamps = true;
 
     /**
      * Соединение с БД, которое должна использовать модель.
@@ -47,7 +47,8 @@ class ProjectItem extends Model
         'quantity',
         'notes',
         'sort_order',
-        'created_at' // Только created_at, без updated_at
+        'created_at',
+        'updated_at'
     ];
 
     /**
@@ -58,6 +59,7 @@ class ProjectItem extends Model
     protected $casts = [
         'quantity' => 'decimal:3',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
 
     /**

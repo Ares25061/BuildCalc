@@ -54,7 +54,7 @@ class SelectedProjectMaterial extends Model
     protected $casts = [
         'quantity' => 'decimal:3',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
 
     /**
@@ -81,10 +81,10 @@ class SelectedProjectMaterial extends Model
         return $this->hasOneThrough(
             Project::class,
             ProjectItem::class,
-            'id', // Foreign key on ProjectItem table
-            'id', // Foreign key on Project table
-            'project_item_id', // Local key on SelectedProjectMaterial table
-            'project_id' // Local key on ProjectItem table
+            'id',
+            'id',
+            'project_item_id',
+            'project_id'
         );
     }
 }

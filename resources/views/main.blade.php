@@ -7,10 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
-<!-- Навигация -->
 @include('layouts.nav')
 
-<!-- Герой секция -->
 <section class="bg-gradient-to-r from-gray-700 to-gray-900 text-white py-20">
     <div class="max-w-7xl mx-auto px-4 text-center">
         <h1 class="text-4xl md:text-5xl font-bold mb-6">Индустриальный подход к сметам</h1>
@@ -18,17 +16,16 @@
             Технологичные решения для строительных расчетов и ведения смет
         </p>
         <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
-            <a href="#" class="bg-orange-500 text-white px-8 py-4 rounded-lg font-semibold hover:bg-orange-600 transition duration-200 text-lg">
-                📋 Создать смету
+
+            <a href="/categories" class="border-2 border-gray-400 text-gray-200 px-8 py-4 rounded-lg font-semibold hover:bg-gray-400 hover:text-gray-900 transition duration-200 text-lg">
+                Каталог материалов
             </a>
-            <a href="#" class="border-2 border-gray-400 text-gray-200 px-8 py-4 rounded-lg font-semibold hover:bg-gray-400 hover:text-gray-900 transition duration-200 text-lg">
-                ⚙️ Калькулятор материалов
+            <a href="#" class="bg-orange-500 text-white px-8 py-4 rounded-lg font-semibold hover:bg-orange-600 transition duration-200 text-lg">
+                Создать смету
             </a>
         </div>
     </div>
 </section>
-
-<!-- Преимущества -->
 <section class="py-16 bg-white">
     <div class="max-w-7xl mx-auto px-4">
         <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Почему строители выбирают нас?</h2>
@@ -59,8 +56,6 @@
         </div>
     </div>
 </section>
-
-<!-- Как это работает -->
 <section class="py-16 bg-gray-100">
     <div class="max-w-7xl mx-auto px-4">
         <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Как работает сервис?</h2>
@@ -88,9 +83,6 @@
         </div>
     </div>
 </section>
-
-
-<!-- Футер -->
 <footer class="bg-gray-900 text-gray-400 py-8">
     <div class="max-w-7xl mx-auto px-4 text-center">
         <div class="mb-4">
@@ -101,18 +93,15 @@
 </footer>
 
 <script>
-    // check auth status
     window.addEventListener('load', function() {
         const token = localStorage.getItem('auth_token');
         const guestButtons = document.getElementById('guestButtons');
         const userButtons = document.getElementById('userButtons');
 
         if (token) {
-            // logged in  - show logout button
             guestButtons.classList.add('hidden');
             userButtons.classList.remove('hidden');
         } else {
-            // not logged in - show login/register buttons
             guestButtons.classList.remove('hidden');
             userButtons.classList.add('hidden');
         }
@@ -132,7 +121,6 @@
             });
 
             if (response.ok) {
-                // clear storage
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('user');
                 window.location.href = '/';

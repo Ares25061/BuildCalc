@@ -8,10 +8,8 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-    <!-- Навигационная панель -->
     @include('layouts.nav')
 
-    <!-- Основной контент -->
         <div class="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8
         <div class="max-w-lg w-full space-y-8">
 

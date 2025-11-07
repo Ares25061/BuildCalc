@@ -13,11 +13,8 @@
 @include('layouts.nav')
 
 <div class="max-w-7xl mx-auto px-4 py-10 space-y-10">
-
-    <!-- ✅ Улучшенная шапка проекта -->
     <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <!-- Левая часть: название и информация -->
             <div class="flex-1">
                 <div class="flex items-center gap-4 mb-4">
                     <h1 id="projectName" class="text-2xl lg:text-3xl font-bold text-gray-900">Загрузка...</h1>
@@ -30,15 +27,12 @@
                         </svg>
                         Печать
                     </button>
-
-
                     <button onclick="editProject()" class="flex items-center justify-center gap-2 bg-gray-200 text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors border border-gray-300 font-medium text-sm whitespace-nowrap">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                         Редактировать
                     </button>
-
                     <button onclick="deleteProject()" class="flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-200 font-medium text-sm whitespace-nowrap">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -46,7 +40,6 @@
                         Удалить
                     </button>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="p-2 bg-blue-100 rounded-lg">
@@ -59,7 +52,6 @@
                             <p id="projectCreated" class="text-sm font-medium">Загрузка...</p>
                         </div>
                     </div>
-
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="p-2 bg-green-100 rounded-lg">
                             <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,7 +63,6 @@
                             <p id="projectStatusText" class="text-sm font-medium">Загрузка...</p>
                         </div>
                     </div>
-
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="p-2 bg-purple-100 rounded-lg">
                             <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +74,6 @@
                             <p id="workPositionsCount" class="text-sm font-medium">0 позиций</p>
                         </div>
                     </div>
-
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="p-2 bg-orange-100 rounded-lg">
                             <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,14 +86,9 @@
                         </div>
                     </div>
                 </div>
-
             </div>
-
-
         </div>
     </div>
-
-    <!-- ✅ Бюджет проекта -->
     <div class="bg-white p-6 rounded-2xl shadow border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Бюджет проекта</h3>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -125,11 +110,8 @@
             </div>
         </div>
     </div>
-
     <div class="bg-gray-100">
-        <!-- ✅ Контейнер для позиций работ -->
         <div id="workPositionsContainer">
-            <!-- Позиции работ будут загружаться здесь -->
             <div class="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
                 <div class="px-6 py-8 text-center text-gray-500">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
@@ -137,8 +119,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- ✅ Улучшенная панель добавления материалов -->
         <div class="flex flex-col sm:flex-row justify-between items-center p-4 border-t bg-white rounded-2xl shadow border border-gray-200 gap-4">
             <div class="text-sm text-gray-600">
                 Всего позиций: <span id="totalWorkPositionsCount" class="font-medium">0</span> •
@@ -162,31 +142,23 @@
             </div>
         </div>
     </div>
-
-
-    <!-- ✅ Панель итогов -->
     <div class="flex justify-end">
         <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow text-right w-full md:w-1/3">
             <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">Финансовый итог</h3>
-
             <div class="space-y-3">
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Стоимость материалов:</span>
                     <span id="materialsSubtotal" class="font-semibold text-gray-900">0 ₽</span>
                 </div>
-
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Стоимость работ:</span>
                     <span class="font-semibold text-gray-900">0 ₽</span>
                 </div>
-
                 <hr class="my-3 border-gray-300">
-
                 <div class="flex justify-between items-center text-xl font-bold text-green-600">
                     <span>Итого:</span>
                     <span id="grandTotal">0 ₽</span>
                 </div>
-
                 <div id="budgetStatus" class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200 hidden">
                     <div class="flex items-center gap-2 text-sm text-green-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,10 +170,7 @@
             </div>
         </div>
     </div>
-
 </div>
-
-<!-- Модальное окно редактирования проекта -->
 <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md">
         <h3 class="text-xl font-semibold text-gray-900 mb-4">Редактировать смету</h3>
@@ -235,8 +204,6 @@
         </form>
     </div>
 </div>
-
-<!-- Модальное окно добавления позиции работ -->
 <div id="addWorkPositionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md">
         <h3 class="text-xl font-semibold text-gray-900 mb-4">Добавить позицию работ</h3>
@@ -266,18 +233,13 @@
     let projectData = null;
     let projectItems = [];
     let workTypes = [];
-
-    // Загрузка данных при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
         loadProjectData();
         loadWorkTypes();
         loadProjectItems();
     });
-
-    // Загрузка данных проекта
     async function loadProjectData() {
         const token = localStorage.getItem('auth_token');
-
         try {
             const response = await fetch(`/api/projects/${projectId}`, {
                 method: 'GET',
@@ -286,7 +248,6 @@
                     'Content-Type': 'application/json'
                 }
             });
-
             if (response.ok) {
                 projectData = await response.json();
                 displayProjectData();
@@ -298,8 +259,6 @@
             showError('Ошибка при загрузке данных проекта');
         }
     }
-
-    // Загрузка типов работ
     async function loadWorkTypes() {
         const token = localStorage.getItem('auth_token');
 
@@ -320,8 +279,6 @@
             console.error('Error loading work types:', error);
         }
     }
-
-    // Загрузка позиций проекта
     async function loadProjectItems() {
         const token = localStorage.getItem('auth_token');
 
@@ -346,8 +303,6 @@
             showError('Ошибка при загрузке позиций работ');
         }
     }
-
-    // Заполнение выбора типов работ
     function populateWorkTypeSelect() {
         const select = document.getElementById('workTypeSelect');
         if (!select) return;
@@ -361,22 +316,17 @@
             select.appendChild(option);
         });
     }
-
-    // Отображение данных проекта
     function displayProjectData() {
         if (!projectData) return;
-
         document.getElementById('projectName').textContent = projectData.name;
         document.getElementById('projectStatusBadge').textContent = getStatusText(projectData.status);
         document.getElementById('projectStatusBadge').className = `px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${getStatusClass(projectData.status)}`;
         document.getElementById('projectStatusText').textContent = getStatusText(projectData.status);
         document.getElementById('projectCreated').textContent = formatDate(projectData.created_at);
         document.getElementById('projectBudget').textContent = formatCurrency(projectData.total_estimated_cost);
-
         document.getElementById('totalBudget').textContent = formatCurrency(projectData.total_estimated_cost);
     }
 
-    // Отображение позиций работ
     function displayProjectItems() {
         const container = document.getElementById('workPositionsContainer');
 
@@ -405,7 +355,6 @@
 
         const itemsHTML = projectItems.map(item => `
             <div class="bg-white rounded-2xl shadow border border-gray-200 mb-6 work-position" data-item-id="${item.id}">
-                <!-- Заголовок позиции -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
@@ -437,11 +386,8 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Материалы позиции -->
                 <div class="divide-y divide-gray-200">
                     ${item.materials.length > 0 ? `
-                        <!-- Header таблицы -->
                         <div class="grid grid-cols-12 bg-gray-50 text-gray-600 text-xs font-medium px-6 py-3">
                             <div class="col-span-5">Наименование материала</div>
                             <div class="col-span-1 text-center">Ед.</div>
@@ -450,8 +396,6 @@
                             <div class="col-span-2 text-right">Сумма</div>
                             <div class="col-span-1 text-center"></div>
                         </div>
-
-                        <!-- Материалы -->
                         ${item.materials.map(material => `
                             <div class="grid grid-cols-12 px-6 py-3 text-sm items-center hover:bg-gray-50 group material-item" data-material-id="${material.id}">
                                 <div class="col-span-5">
@@ -476,7 +420,6 @@
                             </div>
                         `).join('')}
                     ` : `
-                        <!-- Нет материалов -->
                         <div class="px-6 py-8 text-center text-gray-500">
                             <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
@@ -493,18 +436,12 @@
                 </div>
             </div>
         `).join('');
-
         container.innerHTML = itemsHTML;
-
-        // Обновляем счетчики
         document.getElementById('workPositionsCount').textContent = `${projectItems.length} позиций`;
         document.getElementById('workPositionsTotal').textContent = projectItems.length;
-
-        // Инициализируем сортировку
         initializeSortable();
     }
 
-    // Инициализация перетаскивания
     function initializeSortable() {
         const container = document.getElementById('workPositionsContainer');
         if (!container) return;
@@ -524,26 +461,18 @@
         });
     }
 
-    // Обновление расчетов
     function updateCalculations() {
         const materialsTotal = projectItems.reduce((sum, item) => sum + item.item_total, 0);
         const projectBudget = projectData ? (projectData.total_estimated_cost || 0) : 0;
         const savings = projectBudget - materialsTotal;
-
-        // Новые счетчики
         const totalMaterialsCount = projectItems.reduce((sum, item) => sum + item.materials_count, 0);
         const totalWorkPositionsCount = projectItems.length;
-
         document.getElementById('materialsTotal').textContent = formatCurrency(materialsTotal);
         document.getElementById('materialsSubtotal').textContent = formatCurrency(materialsTotal);
         document.getElementById('grandTotal').textContent = formatCurrency(materialsTotal);
         document.getElementById('savings').textContent = formatCurrency(savings);
-
-        // Обновляем новые счетчики
         document.getElementById('totalWorkPositionsCount').textContent = totalWorkPositionsCount;
         document.getElementById('totalMaterialsCount').textContent = totalMaterialsCount;
-
-        // Обновляем статус бюджета
         const budgetStatus = document.getElementById('budgetStatus');
         if (savings >= 0) {
             budgetStatus.className = 'mt-4 p-3 bg-green-50 rounded-lg border border-green-200';
@@ -570,7 +499,6 @@
         }
     }
 
-    // Добавление позиции работ
     function addWorkPosition() {
         document.getElementById('addWorkPositionModal').classList.remove('hidden');
     }
@@ -580,7 +508,6 @@
         document.getElementById('addWorkPositionForm').reset();
     }
 
-    // Обработка формы добавления позиции
     document.getElementById('addWorkPositionForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -619,19 +546,16 @@
         }
     });
 
-    // Редактирование позиции работ
     function editWorkPosition(itemId) {
         const item = projectItems.find(i => i.id === itemId);
         if (!item) return;
 
-        // Можно реализовать модальное окно редактирования
         const newNotes = prompt('Введите новое описание позиции:', item.notes || '');
         if (newNotes !== null) {
             updateWorkPosition(itemId, { notes: newNotes });
         }
     }
 
-    // Обновление позиции работ
     async function updateWorkPosition(itemId, data) {
         const token = localStorage.getItem('auth_token');
 
@@ -657,7 +581,6 @@
         }
     }
 
-    // Удаление позиции работ
     async function deleteWorkPosition(itemId) {
         if (!confirm('Удалить эту позицию работ вместе со всеми материалами?')) return;
 
@@ -683,7 +606,6 @@
         }
     }
 
-    // Изменение порядка позиций
     async function reorderWorkPositions(items) {
         const token = localStorage.getItem('auth_token');
 
@@ -705,7 +627,6 @@
         }
     }
 
-    // Обновление количества материала
     async function updateMaterialQuantity(materialId, newQuantity, itemId) {
         const token = localStorage.getItem('auth_token');
 
@@ -722,18 +643,17 @@
             });
 
             if (response.ok) {
-                loadProjectItems(); // Перезагружаем все данные
+                loadProjectItems();
             } else {
                 throw new Error('Не удалось обновить количество');
             }
         } catch (error) {
             console.error('Error updating material quantity:', error);
             showError('Ошибка при обновлении количества');
-            loadProjectItems(); // Перезагружаем чтобы вернуть правильные значения
+            loadProjectItems();
         }
     }
 
-    // Удаление материала
     async function removeMaterial(materialId, itemId) {
         if (!confirm('Удалить этот материал из позиции?')) return;
 
@@ -759,15 +679,12 @@
         }
     }
 
-    // Редактирование проекта
     function editProject() {
         if (!projectData) return;
-
         document.getElementById('editName').value = projectData.name;
         document.getElementById('editDescription').value = projectData.description || '';
         document.getElementById('editStatus').value = projectData.status;
         document.getElementById('editBudget').value = projectData.total_estimated_cost || 0;
-
         document.getElementById('editModal').classList.remove('hidden');
     }
 
@@ -811,7 +728,6 @@
         }
     });
 
-    // Удаление проекта
     async function deleteProject() {
         if (!confirm('Вы уверены, что хотите удалить эту смету? Это действие нельзя отменить.')) {
             return;
@@ -841,7 +757,6 @@
         }
     }
 
-    // Вспомогательные функции
     function getStatusClass(status) {
         switch (status) {
             case 'in_progress': return 'bg-blue-100 text-blue-700';
@@ -881,7 +796,6 @@
     }
 
     function showSuccess(message) {
-        // Простая реализация уведомления
         alert(message);
     }
 
@@ -892,11 +806,6 @@
     function printEstimate() {
         window.print();
     }
-
-    function exportToExcel() {
-        alert('Функция экспорта в Excel будет реализована позже');
-    }
 </script>
-
 </body>
 </html>
