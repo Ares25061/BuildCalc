@@ -21,6 +21,13 @@ Route::get('/user', function (Request $request) {
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->name('verification.verify');
+
+
 
 Route::apiResource('materials', MaterialsController::class)->only(['index', 'show']);
 Route::apiResource('materialCategories', MaterialCategoryController::class)->only(['index', 'show']);
@@ -28,6 +35,7 @@ Route::apiResource('materialCategories', MaterialCategoryController::class)->onl
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
+    Route::post('/email/verification-notification', [AuthController::class, 'sendVerificationEmail']);
 
     Route::apiResource('users', UserController::class);
     Route::patch('users/{id}', [UserController::class, 'update']);

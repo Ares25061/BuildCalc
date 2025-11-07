@@ -3,6 +3,7 @@
 use App\Http\Controllers\MaterialCategoryController;
 use App\Http\Controllers\MaterialsController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
     return view('main');
@@ -46,3 +47,17 @@ Route::get('/project/create', function () {
 Route::get('/project/{id}', function ($id) {
     return view('show_projects', ['projectId' => $id]);
 })->name('project.show');
+
+Route::get('/email/verify', function () {
+    return view('verify-email');
+})->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->name('verification.verify');
+
+Route::get('/forgot-password', function () {
+    return view('forgot-password');
+})->name('password.request');
+
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])
+    ->name('password.reset');
