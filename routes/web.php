@@ -27,14 +27,6 @@ Route::get('/project', function () {
     return view('project');
 })->name('project.index');
 
-Route::get('/project/create', function () {
-    return view('project.create');
-})->name('project.create');
-
-Route::get('/project/{id}', function ($id) {
-    return view('project.show', ['projectId' => $id]);
-})->name('project.show');
-
 Route::get('/test', fn() => view('test'));
 Route::get('/project', function () {
     return view('project');
